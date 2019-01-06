@@ -28,6 +28,7 @@
  */
 
 #include <agar/config/have_sdl.h>
+#include <agar/config/have_sdl2.h>
 #include <agar/config/have_opengl.h>
 #include <agar/config/have_glx.h>
 #include <agar/config/have_wgl.h>
@@ -46,6 +47,9 @@ extern AG_Driver agDriverSDLFB;
 #endif
 #if defined(HAVE_SDL) && defined(HAVE_OPENGL)
 extern AG_Driver agDriverSDLGL;
+#endif
+#if defined(HAVE_SDL2)
+extern AG_Driver agDriverSDL2;
 #endif
 #if defined(HAVE_WGL)
 extern AG_Driver agDriverWGL;
@@ -72,6 +76,9 @@ void *agDriverList[] = {
 #endif
 #if defined(HAVE_SDL)
 	&agDriverSDLFB,
+#endif
+#if defined(HAVE_SDL2)
+	&agDriverSDL2,
 #endif
 };
 Uint agDriverListSize = sizeof(agDriverList) / sizeof(agDriverList[0]);

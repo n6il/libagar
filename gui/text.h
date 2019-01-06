@@ -66,7 +66,7 @@ typedef struct ag_glyph {
 	Uint32          ch;		/* Unicode character */
 	AG_Surface     *su;		/* Rendered surface */
 	int             advance;	/* Pixel advance */
-	Uint            texture;	/* Cached texture (driver-specific) */
+	Uint64          texture;	/* Cached texture (driver-specific) */ //WDZ - Textures
 	AG_TexCoord     texcoords;	/* Texture coordinates */
 	AG_SLIST_ENTRY(ag_glyph) glyphs;
 } AG_Glyph;
@@ -126,90 +126,59 @@ typedef struct ag_glyph_cache {
 	AG_SLIST_HEAD_(ag_glyph) glyphs;
 } AG_GlyphCache;
 
+/* Begin generated block */
 __BEGIN_DECLS
-extern AG_ObjectClass agFontClass;
-extern AG_Font *agDefaultFont;
-extern int agTextFontHeight;
-extern int agTextFontAscent;
-extern int agTextFontDescent;
-extern int agTextFontLineSkip;
-extern int agFreetypeInited;
-extern int agRTL;
-extern int agGlyphGC;
-extern AG_TextState *agTextState;
-extern AG_Mutex agTextLock;
-extern AG_StaticFont *agBuiltinFonts[];
-extern const int agBuiltinFontCount;
+extern DECLSPEC AG_ObjectClass agFontClass;
+extern DECLSPEC AG_Font *agDefaultFont;
+extern DECLSPEC int agTextFontHeight;
+extern DECLSPEC int agTextFontAscent;
+extern DECLSPEC int agTextFontDescent;
+extern DECLSPEC int agTextFontLineSkip;
+extern DECLSPEC int agFreetypeInited;
+extern DECLSPEC int agRTL;
+extern DECLSPEC int agGlyphGC;
+extern DECLSPEC AG_TextState *agTextState;
+extern DECLSPEC AG_Mutex agTextLock;
+extern DECLSPEC AG_StaticFont *agBuiltinFonts[];
+extern DECLSPEC const int agBuiltinFontCount;
+extern DECLSPEC int AG_InitTextSubsystem(void);
+extern DECLSPEC void AG_DestroyTextSubsystem(void);
+extern DECLSPEC void AG_TextParseFontSpec(const char *);
+extern DECLSPEC AG_Font *AG_FetchFont(const char *, int, int);
+extern DECLSPEC void AG_UnusedFont(AG_Font *);
+extern DECLSPEC void AG_SetDefaultFont(AG_Font *);
+extern DECLSPEC void AG_SetRTL(int);
+extern DECLSPEC void AG_PushTextState(void);
+extern DECLSPEC void AG_PopTextState(void);
+extern DECLSPEC AG_Font *AG_TextFontLookup(const char *, int, Uint);
+extern DECLSPEC AG_Font *AG_TextFontPts(int);
+extern DECLSPEC AG_Font *AG_TextFontPct(int);
+extern DECLSPEC void AG_TextSize(const char *, int *, int *);
+extern DECLSPEC void AG_TextSizeMulti(const char *, int *, int *, Uint **, Uint *);
+extern DECLSPEC void AG_TextSizeUCS4(const Uint32 *, int *, int *);
+extern DECLSPEC void AG_TextSizeMultiUCS4(const Uint32 *, int *, int *, Uint **, Uint *);
+extern DECLSPEC AG_Surface *AG_TextRenderf(const char *, ...);
+extern DECLSPEC AG_Surface *AG_TextRenderUCS4(const Uint32 *);
+extern DECLSPEC void AG_TextMsgS(enum ag_text_msg_title, const char *);
+extern DECLSPEC void AG_TextMsg(enum ag_text_msg_title, const char *, ...) FORMAT_ATTRIBUTE(printf,2,3) NONNULL_ATTRIBUTE(2);
+extern DECLSPEC void AG_TextTmsgS(enum ag_text_msg_title, Uint32, const char *);
+extern DECLSPEC void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *, ...) FORMAT_ATTRIBUTE(printf,3,4) NONNULL_ATTRIBUTE(3);
+extern DECLSPEC void AG_TextInfoS(const char *, const char *);
+extern DECLSPEC void AG_TextInfo(const char *, const char *, ...) FORMAT_ATTRIBUTE(printf,2,3) NONNULL_ATTRIBUTE(2);
+extern DECLSPEC void AG_TextWarningS(const char *, const char *);
+extern DECLSPEC void AG_TextWarning(const char *, const char *, ...) FORMAT_ATTRIBUTE(printf,2,3) NONNULL_ATTRIBUTE(2);
+extern DECLSPEC void AG_TextErrorS(const char *);
+extern DECLSPEC void AG_TextError(const char *, ...) FORMAT_ATTRIBUTE(printf,1,2) NONNULL_ATTRIBUTE(1);
+extern DECLSPEC void AG_TextEditFloat(double *, double, double, const char *, const char *, ...) FORMAT_ATTRIBUTE(printf,5,6) NONNULL_ATTRIBUTE(5);
+extern DECLSPEC void AG_TextEditString(char *, size_t, const char *, ...) FORMAT_ATTRIBUTE(printf,3,4) NONNULL_ATTRIBUTE(3);
+extern DECLSPEC struct ag_window *AG_TextPromptOptions(struct ag_button **, Uint, const char *, ...);
+extern DECLSPEC void AG_TextInitGlyphCache(AG_Driver *);
+extern DECLSPEC void AG_TextClearGlyphCache(AG_Driver *);
+extern DECLSPEC void AG_TextDestroyGlyphCache(AG_Driver *);
+extern DECLSPEC AG_Glyph *AG_TextRenderGlyphMiss(AG_Driver *, Uint32);
+extern DECLSPEC void AG_TextAlign(int *, int *, int, int, int, int, int, int, int, int, enum ag_text_justify, enum ag_text_valign);
+#define AG_TextMsgFromError() AG_TextMsgS(AG_MSG_ERROR, AG_GetError())
 
-int	 AG_InitTextSubsystem(void);
-void	 AG_DestroyTextSubsystem(void);
-
-void	 AG_TextParseFontSpec(const char *);
-AG_Font	*AG_FetchFont(const char *, int, int);
-void     AG_UnusedFont(AG_Font *);
-void	 AG_SetDefaultFont(AG_Font *);
-void	 AG_SetRTL(int);
-
-void	 AG_PushTextState(void);
-void	 AG_PopTextState(void);
-AG_Font *AG_TextFontLookup(const char *, int, Uint);
-AG_Font *AG_TextFontPts(int);
-AG_Font *AG_TextFontPct(int);
-
-void	 AG_TextSize(const char *, int *, int *);
-void	 AG_TextSizeMulti(const char *, int *, int *, Uint **, Uint *);
-void	 AG_TextSizeUCS4(const Uint32 *, int *, int *);
-void	 AG_TextSizeMultiUCS4(const Uint32 *, int *, int *, Uint **, Uint *);
-
-AG_Surface *AG_TextRenderf(const char *, ...);
-AG_Surface *AG_TextRenderUCS4(const Uint32 *);
-
-void AG_TextMsgS(enum ag_text_msg_title, const char *);
-void AG_TextMsg(enum ag_text_msg_title, const char *, ...)
-                FORMAT_ATTRIBUTE(printf,2,3)
-		NONNULL_ATTRIBUTE(2);
-
-void AG_TextTmsgS(enum ag_text_msg_title, Uint32, const char *);
-void AG_TextTmsg(enum ag_text_msg_title, Uint32, const char *, ...)
-	         FORMAT_ATTRIBUTE(printf,3,4)
-		 NONNULL_ATTRIBUTE(3);
-
-void AG_TextInfoS(const char *, const char *);
-void AG_TextInfo(const char *, const char *, ...)
-	         FORMAT_ATTRIBUTE(printf,2,3)
-		 NONNULL_ATTRIBUTE(2);
-
-void AG_TextWarningS(const char *, const char *);
-void AG_TextWarning(const char *, const char *, ...)
-	            FORMAT_ATTRIBUTE(printf,2,3)
-	            NONNULL_ATTRIBUTE(2);
-
-void AG_TextErrorS(const char *);
-void AG_TextError(const char *, ...)
-	          FORMAT_ATTRIBUTE(printf,1,2)
-	          NONNULL_ATTRIBUTE(1);
-
-void AG_TextEditFloat(double *, double, double, const char *,
-		      const char *, ...)
-		      FORMAT_ATTRIBUTE(printf,5,6)
-		      NONNULL_ATTRIBUTE(5);
-void AG_TextEditString(char *, size_t, const char *, ...)
-		       FORMAT_ATTRIBUTE(printf,3,4)
-		       NONNULL_ATTRIBUTE(3);
-struct ag_window *AG_TextPromptOptions(struct ag_button **, Uint, const char *, ...);
-
-void      AG_TextInitGlyphCache(AG_Driver *);
-void      AG_TextClearGlyphCache(AG_Driver *);
-void      AG_TextDestroyGlyphCache(AG_Driver *);
-AG_Glyph *AG_TextRenderGlyphMiss(AG_Driver *, Uint32);
-
-void AG_TextAlign(int *, int *, int, int, int, int, int, int, int,
-                  int, enum ag_text_justify, enum ag_text_valign);
-
-#define AG_TextMsgFromError() \
-	AG_TextMsgS(AG_MSG_ERROR, AG_GetError())
-
-/* Compare two text states. */
 static __inline__ int
 AG_TextStateCompare(const AG_TextState *s1, const AG_TextState *s2)
 {
@@ -223,11 +192,11 @@ AG_TextStateCompare(const AG_TextState *s1, const AG_TextState *s2)
 	}
 	return (1);
 }
-
 /*
  * Return the offset in pixels needed to align text based on the current
  * justification mode.
  */
+
 static __inline__ int
 AG_TextJustifyOffset(int w, int wLine)
 {
@@ -238,11 +207,11 @@ AG_TextJustifyOffset(int w, int wLine)
 	}
 	return (0);
 }
-
 /*
  * Return the offset in pixels needed to align text based on the current
  * vertical alignment mode.
  */
+
 static __inline__ int
 AG_TextValignOffset(int h, int hLine)
 {
@@ -253,11 +222,11 @@ AG_TextValignOffset(int h, int hLine)
 	}
 	return (0);
 }
-
 /*
  * Allocate a transparent surface and render text from a C string.
  * The string may contain UTF-8 sequences.
  */
+
 static __inline__ AG_Surface *
 AG_TextRender(const char *text)
 {
@@ -271,11 +240,11 @@ AG_TextRender(const char *text)
 	}
 	return (NULL);
 }
-
 /*
  * Lookup/insert a glyph in the glyph cache.
  * Must be called from GUI rendering context.
  */
+
 static __inline__ AG_Glyph *
 AG_TextRenderGlyph(AG_Driver *drv, Uint32 ch)
 {
@@ -295,8 +264,6 @@ AG_TextRenderGlyph(AG_Driver *drv, Uint32 ch)
 	return (gl);
 }
 
-
-/* Set active text color. */
 static __inline__ void
 AG_TextColor(AG_Color C)
 {
@@ -304,6 +271,7 @@ AG_TextColor(AG_Color C)
 	agTextState->color = C;
 	AG_MutexUnlock(&agTextLock);
 }
+
 static __inline__ void
 AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
@@ -311,6 +279,7 @@ AG_TextColorRGB(Uint8 r, Uint8 g, Uint8 b)
 	agTextState->color = AG_ColorRGB(r,g,b);
 	AG_MutexUnlock(&agTextLock);
 }
+
 static __inline__ void
 AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
@@ -319,7 +288,6 @@ AG_TextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	AG_MutexUnlock(&agTextLock);
 }
 
-/* Set text color from 0xRRGGBBAA format. */
 static __inline__ void
 AG_TextColorHex(Uint32 c)
 {
@@ -328,7 +296,6 @@ AG_TextColorHex(Uint32 c)
 	AG_MutexUnlock(&agTextLock);
 }
 
-/* Set active text background color. */
 static __inline__ void
 AG_TextBGColor(AG_Color C)
 {
@@ -336,6 +303,7 @@ AG_TextBGColor(AG_Color C)
 	agTextState->colorBG = C;
 	AG_MutexUnlock(&agTextLock);
 }
+
 static __inline__ void
 AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
 {
@@ -343,6 +311,7 @@ AG_TextBGColorRGB(Uint8 r, Uint8 g, Uint8 b)
 	agTextState->colorBG = AG_ColorRGB(r,g,b);
 	AG_MutexUnlock(&agTextLock);
 }
+
 static __inline__ void
 AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
@@ -351,7 +320,6 @@ AG_TextBGColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 	AG_MutexUnlock(&agTextLock);
 }
 
-/* Set text BG color from 0xRRGGBBAA format. */
 static __inline__ void
 AG_TextBGColorHex(Uint32 c)
 {
@@ -360,7 +328,6 @@ AG_TextBGColorHex(Uint32 c)
 	AG_MutexUnlock(&agTextLock);
 }
 
-/* Select a specific font face to use in rendering text. */
 static __inline__ void
 AG_TextFont(AG_Font *font)
 {
@@ -369,7 +336,6 @@ AG_TextFont(AG_Font *font)
 	AG_MutexUnlock(&agTextLock);
 }
 
-/* Select the justification mode to use in rendering text. */
 static __inline__ void
 AG_TextJustify(enum ag_text_justify mode)
 {
@@ -378,7 +344,6 @@ AG_TextJustify(enum ag_text_justify mode)
 	AG_MutexUnlock(&agTextLock);
 }
 
-/* Select the vertical alignment mode to use in rendering text. */
 static __inline__ void
 AG_TextValign(enum ag_text_valign mode)
 {
@@ -387,7 +352,6 @@ AG_TextValign(enum ag_text_valign mode)
 	AG_MutexUnlock(&agTextLock);
 }
 
-/* Select the tab width in pixels for rendering text. */
 static __inline__ void
 AG_TextTabWidth(int px)
 {
@@ -395,7 +359,6 @@ AG_TextTabWidth(int px)
 	agTextState->tabWd = px;
 	AG_MutexUnlock(&agTextLock);
 }
-
 #ifdef AG_LEGACY
 #define AG_TextFormat AG_TextRenderf
 
@@ -409,9 +372,9 @@ AG_TextColor32(Uint32 px)
 	agTextState->color = C;
 	AG_MutexUnlock(&agTextLock);
 }
-#endif /* AG_LEGACY */
-
+#endif 
 __END_DECLS
+/* Close generated block */
 
 #include <agar/gui/close.h>
 #endif	/* _AGAR_GUI_TEXT_H_ */

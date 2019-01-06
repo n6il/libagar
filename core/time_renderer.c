@@ -15,9 +15,13 @@
 
 #include <agar/core/core.h>
 
-AG_Cond agCondBeginRender;
-AG_Cond agCondEndRender;
-AG_Mutex agCondRenderLock;
+__declspec(dllexport) AG_Cond agCondBeginRender;
+__declspec(dllexport) AG_Cond agCondEndRender;
+__declspec(dllexport) AG_Mutex agCondRenderLock;
+
+// AG_Cond agCondBeginRender;
+// AG_Cond agCondEndRender;
+// AG_Mutex agCondRenderLock;
 
 static struct timespec t0;
 static int inited = 0;

@@ -3,6 +3,12 @@
  * Generic graphics/input driver framework.
  */
 
+/*
+ * WDZ Modifications made to driver texture functions accomodate the AG_Widget.textures pointer changing
+ * to 64bit. All changes commented with // WDZ - Textures
+ * Ideally updateTexture/deleteTexture should be changed to accomodate destructive updates/deletes.
+ */
+
 #ifndef _AGAR_GUI_DRV_H_
 #define _AGAR_GUI_DRV_H_
 
@@ -61,9 +67,9 @@ typedef struct ag_driver_class {
 	/* Update video region (rendering context; FB driver specific) */
 	void (*updateRegion)(void *drv, AG_Rect r);
 	/* Texture operations (GL driver specific) */
-	void (*uploadTexture)(void *drv, Uint *, AG_Surface *, AG_TexCoord *);
-	int  (*updateTexture)(void *drv, Uint, AG_Surface *, AG_TexCoord *);
-	void (*deleteTexture)(void *drv, Uint);
+	void (*uploadTexture)(void *drv, Uint64 *, AG_Surface *, AG_TexCoord *); // WDZ - Texture
+	int  (*updateTexture)(void *drv, Uint64 *, AG_Surface *, AG_TexCoord *); // WDZ - Texture
+	void (*deleteTexture)(void *drv, Uint64 *); // WDZ - Texture
 	/* Request a specific refresh rate (driver specific) */
 	int (*setRefreshRate)(void *drv, int fps);
 	/* Clipping and blending control (rendering context) */

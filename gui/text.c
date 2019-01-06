@@ -695,6 +695,7 @@ AG_TextRenderGlyphMiss(AG_Driver *drv, Uint32 ch)
 	gl = Malloc(sizeof(AG_Glyph));
 	gl->font = agTextState->font;
 	gl->color = agTextState->color;
+	gl->texture = 0; // WDZ - Textures (Should have always been initialised)
 	gl->ch = ch;
 	ucs[0] = ch;
 	ucs[1] = '\0';

@@ -49,6 +49,7 @@ REGISTER("--with-x[=PREFIX]",		"Build with X windows support [check]")
 REGISTER("--with-xinerama[=PREFIX]",	"Build with Xinerama support [check]")
 REGISTER("--with-glx[=PREFIX]",		"Enable accelerated X driver [check]")
 REGISTER("--with-sdl[=PREFIX]",		"Enable SDL 1.2 driver [check]")
+REGISTER("--with-sdl2[=PREFIX]",		"Enable SDL 2.0 driver [check]")
 REGISTER("--with-wgl",			"Enable MS Windows driver [check]")
 REGISTER("--with-cocoa",		"Enable MacOS X Cocoa driver [check]")
 REGISTER("--with-uim[=PREFIX]",		"Enable UIM input method [no]")
@@ -168,6 +169,24 @@ if [ "${enable_gui}" != "no" ]; then
 		fi
 	else
 		HUNDEF(HAVE_SDL)
+	fi
+
+	# Enable SDL2 support if the SDL2 library is found.
+	if [ "${with_sdl2}" != "no" ]; then
+		CHECK(sdl, 2.0.8, ${prefix_sdl2})
+		if [ "${HAVE_SDL2}" != "yes" ]; then
+			if [ "${with_sdl2}" = "yes" ]; then
+				echo "*"
+				echo "* --with-sdl2 was requested, but the SDL2 "
+				echo "* library was not found."
+				echo "*"
+				exit 1
+			else
+				HUNDEF(HAVE_SDL2)
+			fi
+		fi
+	else
+		HUNDEF(HAVE_SDL2)
 	fi
 
 	# Enable OpenGL support if an OpenGL library is found.
@@ -357,6 +376,7 @@ else
 	MDEFINE(SUBDIR_gui, "")
 
 	HUNDEF(HAVE_SDL)
+	HUNDEF(HAVE_SDL2)
 	HUNDEF(HAVE_X11)
 	HUNDEF(HAVE_COCOA)
 	HUNDEF(HAVE_OPENGL)
@@ -734,6 +754,9 @@ if [ "${HAVE_SDL}" = "yes" ]; then
 		MAPPEND(SRCS_GUI, "drv_sdlgl.c")
 	fi
 fi
+if [ "${HAVE_SDL2}" = "yes" ]; then
+	MAPPEND(SRCS_GUI, "drv_sdl2_common.c drv_sdl2.c")
+fi
 if [ "${HAVE_OPENGL}" = "yes" ]; then
 	MAPPEND(SRCS_GUI, "drv_gl_common.c")
 	if [ "${HAVE_GLX}" = "yes" ]; then
@@ -767,12 +790,12 @@ C_INCDIR_CONFIG($BLD/include/agar/config)
 
 # Generate the "foo-config" scripts.
 CONFIG_SCRIPT(agar-config,\
-	"-I${INCLDIR} ${SDL_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
+	"-I${INCLDIR} ${SDL_CFLAGS} ${SDL2_CFLAGS} ${FREETYPE_CFLAGS} ${FONTCONFIG_CFLAGS} \
 	${OPENGL_CFLAGS} ${X11_CFLAGS} ${GLX_CFLAGS} ${XINERAMA_CFLAGS} \
 	${COCOA_CFLAGS} ${MATH_CFLAGS} ${PNG_CFLAGS} ${PTHREADS_CFLAGS} \
 	${DB4_CFLAGS} ${MYSQL_CFLAGS} ${GETTEXT_CFLAGS} ${DSO_CFLAGS} \
 	${CLOCK_CFLAGS} ${UIM_CFLAGS} ${ICONV_CFLAGS}",\
-	"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${FREETYPE_LIBS} \
+	"-L${LIBDIR} -lag_gui -lag_core ${SDL_LIBS} ${SDL2_LIBS} ${FREETYPE_LIBS} \
 	${FONTCONFIG_LIBS} ${OPENGL_LIBS} ${X11_LIBS} ${XINERAMA_LIBS} \
 	${COCOA_LIBS} ${MATH_LIBS} ${JPEG_LIBS} ${PNG_LIBS} ${PTHREADS_LIBS} \
 	${DB4_LIBS} ${MYSQL_LIBS} ${GETTEXT_LIBS} ${DSO_LIBS} ${CLOCK_LIBS} \

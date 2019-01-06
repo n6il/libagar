@@ -27,6 +27,11 @@
  * Routines common to all OpenGL drivers.
  */
 
+/*
+ * WDZ Modifications made to accomodate the AG_Widget.textures pointer changing
+ * to 64bit. All changes commented with // WDZ - Textures
+ */
+
 #include <agar/core/core.h>
 #include <agar/gui/gui.h>
 #include <agar/gui/window.h>
@@ -258,13 +263,13 @@ AG_GL_StdPopBlendingMode(void *obj)
  * Standard texture management operations.
  */
 void
-AG_GL_StdDeleteTexture(void *obj, Uint texture)
+AG_GL_StdDeleteTexture(void *obj, Uint64 *texture)
 {
 	AG_Driver *drv = obj;
 	AG_GL_Context *gl = drv->gl;
 
 	gl->textureGC = Realloc(gl->textureGC, (gl->nTextureGC+1)*sizeof(Uint));
-	gl->textureGC[gl->nTextureGC++] = texture;
+	gl->textureGC[gl->nTextureGC++] = *((Uint*)texture);
 }
 void
 AG_GL_StdDeleteList(void *obj, Uint list)
@@ -277,7 +282,7 @@ AG_GL_StdDeleteList(void *obj, Uint list)
 }
 
 void
-AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_StdUploadTexture(void *obj, Uint64 *rv, AG_Surface *su, AG_TexCoord *tc) // WDZ - Textures
 {
 	AG_Surface *gsu;
 	GLuint texture;
@@ -317,11 +322,11 @@ AG_GL_StdUploadTexture(void *obj, Uint *rv, AG_Surface *su, AG_TexCoord *tc)
 	if (!(su->flags & AG_SURFACE_GLTEXTURE)) {
 		AG_SurfaceFree(gsu);
 	}
-	*rv = texture;
+	*((GLuint*)rv) = texture;  // WDZ - Texture
 }
 
 int
-AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *su, AG_TexCoord *tc)
+AG_GL_StdUpdateTexture(void *obj, Uint64 *texture, AG_Surface *su, AG_TexCoord *tc) //WDZ - Textures
 {
 	AG_Surface *gsu;
 
@@ -340,7 +345,7 @@ AG_GL_StdUpdateTexture(void *obj, Uint texture, AG_Surface *su, AG_TexCoord *tc)
 		tc->h = (float)gsu->h / (float)su->h;
 	}
 
-	glBindTexture(GL_TEXTURE_2D, (GLuint)texture);
+	glBindTexture(GL_TEXTURE_2D, *((GLuint*)texture)); //WDZ - Textures
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
 	    gsu->w, gsu->h, 0,
 	    GL_RGBA,
@@ -366,7 +371,7 @@ AG_GL_PrepareTexture(void *obj, int s)
 		    &wid->texcoords[s]);
 	} else if (wid->surfaceFlags[s] & AG_WIDGET_SURFACE_REGEN) {
 		wid->surfaceFlags[s] &= ~(AG_WIDGET_SURFACE_REGEN);
-		AG_GL_UpdateTexture(drv, wid->textures[s],
+		AG_GL_UpdateTexture(drv, &wid->textures[s], // WDZ - Textures
 		    wid->surfaces[s], &wid->texcoords[s]);
 	}
 }
@@ -435,7 +440,7 @@ AG_GL_BlitSurfaceFrom(void *obj, AG_Widget *wid, AG_Widget *widSrc, int s,
 	    AG_ALPHA_SRC,
 	    AG_ALPHA_ONE_MINUS_SRC);
 
-	glBindTexture(GL_TEXTURE_2D, widSrc->textures[s]);
+	glBindTexture(GL_TEXTURE_2D, (GLuint)widSrc->textures[s]); // WDZ - Textures
 	glBegin(GL_POLYGON);
 	{
 		glTexCoord2f(tc->x, tc->y);	glVertex2i(x,       y);
@@ -495,7 +500,7 @@ AG_GL_BlitSurfaceFromGL(void *obj, AG_Widget *wid, int s, float w, float h)
 	    AG_ALPHA_SRC,
 	    AG_ALPHA_ONE_MINUS_SRC);
 	
-	glBindTexture(GL_TEXTURE_2D, wid->textures[s]);
+	glBindTexture(GL_TEXTURE_2D, (GLuint)wid->textures[s]); // WDZ - Textures
 	glBegin(GL_POLYGON);
 	{
 		glTexCoord2f(tc->x, tc->y);	glVertex2f( w2,  h2);
@@ -572,7 +577,7 @@ AG_GL_BackupSurfaces(void *obj, AG_Widget *wid)
 		wid->surfaces[i] = su;
 	}
 	glDeleteTextures(wid->nsurfaces, (GLuint *)wid->textures);
-	memset(wid->textures, 0, wid->nsurfaces*sizeof(Uint));
+	memset(wid->textures, 0, wid->nsurfaces*sizeof(Uint64)); // WDZ - Textures
 	AG_ObjectUnlock(wid);
 }
 
@@ -1080,7 +1085,7 @@ AG_GL_DrawGlyph(void *obj, const AG_Glyph *gl, int x, int y)
 	AG_Surface *su = gl->su;
 	const AG_TexCoord *tc = &gl->texcoords;
 
-	glBindTexture(GL_TEXTURE_2D, gl->texture);
+	glBindTexture(GL_TEXTURE_2D, (GLuint)gl->texture); //WDZ - Texture
 	glBegin(GL_POLYGON);
 	{
 		glTexCoord2f(tc->x, tc->y);	glVertex2i(x,       y);

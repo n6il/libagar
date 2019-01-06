@@ -1,0 +1,17 @@
+To Build
+untar AGAR-1.5.0
+Add new/replacement files
+In mk/build.lib.mk file add option --tag CC like so:
+	LIBTOOLOPTS?=	--tag CC	--quiet
+
+configure options:
+	-with-sdl2
+	-with-libtool=/usr/bin/libtool
+	-without-sdl
+After configure on win platform replace all ocurrences of sdl2.dll with sdl2
+For Tests
+On win system with dual graphics ensure graphics performance set to max or gdi32.dll may not load.
+In the tests/Makefile.config ensure the AGAR_LIBS= has all the necessary libs like so:
+	AGAR_LIBS=-L/c/msys64/mingw64/lib -lag_gui -lag_core -lag_math -lag_dev -LC:/msys64/mingw64/lib -lfreetype \
+	  -L/c/msys64/mingw64/lib -lopengl32 -lgdi32    -lm -L/c/msys64/mingw64/lib -ljpeg -L/mingw64/lib -lpng16 \
+	  -lpthread     -lwinmm  

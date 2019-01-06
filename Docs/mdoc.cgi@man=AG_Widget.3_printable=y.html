@@ -1,0 +1,714 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<a name="SYNOPSIS"></a>
+<hr>
+<h1 class=mansection>SYNOPSIS</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px; margin-top:10px"><tr><td><pre>#include &lt;agar/core.h&gt;
+#include &lt;agar/gui.h&gt;
+</pre></td></tr></table></td></tr></table><a name="DESCRIPTION"></a>
+<hr>
+<h1 class=mansection>DESCRIPTION</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+<font class=nm>AG_Widget</font> is the base class for GUI widgets (and windows) in Agar GUI.
+Instances of
+<font class=nm>AG_Widget</font> can be attached (using
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_ObjectAttach.3&amp;printable=y">AG_ObjectAttach(3)</a>) to any other
+<font class=nm>AG_Widget</font> (known as the
+<font class=em>container</font> widget).
+General-purpose container widgets include
+<a class=xr href="mdoc.cgi@man=AG_Window.3&amp;printable=y.html">AG_Window(3)</a> and
+<a class=xr href="mdoc.cgi@man=AG_Box.3&amp;printable=y.html">AG_Box(3)</a>. <br><br>The class registration interface of
+<a class=xr href="mdoc.cgi@man=AG_Object.3&amp;printable=y.html">AG_Object(3)</a> allows new widgets to be implemented (or derived from existing classes).
+Widgets use the object system's
+<a class=xr href="mdoc.cgi@man=AG_Event.3&amp;printable=y.html">AG_Event(3)</a> to handle (and deliver) events.
+<a class=xr href="mdoc.cgi@man=AG_Variable.3&amp;printable=y.html">AG_Variable(3)</a> provides the basis for memory bindings (see
+<a class=xr href="mdoc.cgi@man=AG_Widget.3&amp;printable=y.html#BINDINGS">BINDINGS</a> section).
+</td></tr></table><a name="INHERITANCE_HIERARCHY"></a>
+<hr>
+<h1 class=mansection>INHERITANCE HIERARCHY</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+<a class=xr href="mdoc.cgi@man=AG_Object.3&amp;printable=y.html">AG_Object(3)</a>-&gt; <font class=nm>AG_Widget</font>. </td></tr></table><a name="CLASS_OPERATIONS"></a>
+<hr>
+<h1 class=mansection>CLASS OPERATIONS</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+Object operations specific to the
+<font class=nm>AG_Widget</font> class are defined as follows:
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px; margin-top:10px"><tr><td><pre>typedef struct ag_widget_class {
+	struct ag_object_class _inherit;
+	void (*draw)(AG_Widget *w);
+	void (*size_request)(AG_Widget *w, AG_SizeReq *req);
+	int  (*size_allocate)(AG_Widget *w, const AG_SizeAlloc *alloc);
+} AG_WidgetClass;
+</pre></td></tr></table><br><font class=fnName>draw()</font> renders the widget to the graphics display.
+The code under
+<font class=fnName>draw()</font> is referred to as the
+ <font class=pref>Rendering Context</font>. Some functions (such as
+<font class=fnName>AG_WidgetBlitSurface()</font>) are unsafe to call outside Rendering Context.
+<br><br><font class=fnName>size_request()</font> should return an initial, preferred geometry in px (without any guarantee
+that the request will be satisfied).
+For example, an
+<a class=xr href="mdoc.cgi@man=AG_Label.3&amp;printable=y.html">AG_Label(3)</a>, might return the expected size of a rendered text label.
+<br><br><font class=fnName>size_allocate()</font> is called once the widget has been successfully allocated a new size
+or position within its parent (as described by the
+<var class=va>w</var>, <var class=va>h</var>, <var class=va>x</var> and
+<var class=va>y</var> members of the
+<font class=ft><b>AG_SizeAlloc</b></font> argument).
+Container widgets allocate the position and size of their children in
+<font class=fnName>size_allocate()</font>. <br><br><font class=fnName>size_allocate()</font> should return 0 on success and -1 if the allocation is not satisfactory for
+<font class=fnName>draw()</font> to work at all (in which case the
+<font class=dv>UNDERSIZE</font> flag will be set and
+<font class=fnName>draw()</font> will not run).
+</td></tr></table><a name="SIZING"></a>
+<hr>
+<h1 class=mansection>SIZING</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px"><tr><td><br><font class=ft><b>void</b></font> <a class=fnName name="AG_Expand"></a><font class=fnSpec>AG_Expand (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_ExpandHoriz"></a><font class=fnSpec>AG_ExpandHoriz (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_ExpandVert"></a><font class=fnSpec>AG_ExpandVert (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetSizeReq"></a><font class=fnSpec>AG_WidgetSizeReq (<font class=fnArgs>AG_Widget *widget, AG_SizeReq *req</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetSizeAlloc"></a><font class=fnSpec>AG_WidgetSizeAlloc (<font class=fnArgs>AG_Widget *widget, AG_SizeAlloc *alloc</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetSetPosition"></a><font class=fnSpec>AG_WidgetSetPosition (<font class=fnArgs>AG_Widget *widget, int x, int y</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetSetSize"></a><font class=fnSpec>AG_WidgetSetSize (<font class=fnArgs>AG_Widget *widget, int w, int h</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetSetGeometry"></a><font class=fnSpec>AG_WidgetSetGeometry (<font class=fnArgs>AG_Widget *widget, AG_Rect rect</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetUpdate"></a><font class=fnSpec>AG_WidgetUpdate (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br></td></tr></table><br><font class=fnName>AG_Expand()</font> makes the widget fill all available space in the parent.
+<font class=fnName>AG_ExpandHoriz()</font> and
+<font class=fnName>AG_ExpandVert()</font> makes the widget fill the available space horizontally or vertically.
+<br><br>Note: Most widget constructors accept
+<font class=dv>EXPAND</font>, <font class=dv>HFILL</font> and
+<font class=dv>VFILL</font> as option flags.
+Setting them is equivalent to calling
+<font class=fnName>AG_Expand()</font>, <font class=fnName>AG_ExpandHoriz()</font> and
+<font class=fnName>AG_ExpandVert()</font>. <br><br><font class=fnName>AG_WidgetSizeReq()</font> invokes the
+<font class=fnName>size_request()</font> operation of the widget and returns its size requisition into
+<var class=fa>req</var>. <font class=fnName>AG_WidgetSizeAlloc()</font> allocates the given position and geometry of the widget.
+If the
+<var class=va>w</var> or
+<var class=va>h</var> argument is &lt;= 0, the
+<font class=dv>AG_WIDGET_UNDERSIZE</font> flag is set, preventing the widget from subsequent rendering.
+<br><br><font class=fnName>AG_WidgetSizeReq()</font> and
+<font class=fnName>AG_WidgetSizeAlloc()</font> are meant to be called only from within the
+<font class=fnName>size_request()</font> and
+<font class=fnName>size_allocate()</font> functions of a container widget implementation, in order to
+size and position the child widgets attached to the container
+(if you must set widget geometries explicitely, use either the
+<a class=xr href="mdoc.cgi@man=AG_Fixed.3&amp;printable=y.html">AG_Fixed(3)</a> container, or create your own container widget).
+<br><br>The
+<font class=ft><b>AG_SizeReq</b></font> and
+<font class=ft><b>AG_SizeAlloc</b></font> structures are defined as follows:
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px; margin-top:10px"><tr><td><pre>typedef struct ag_size_req {
+	int w, h;			/* Requested geometry in pixels */
+} AG_SizeReq;
+
+typedef struct ag_size_alloc {
+	int w, h;			/* Allocated geometry in pixels */
+	int x, y;			/* Allocated position in pixels */
+} AG_SizeAlloc;
+</pre></td></tr></table><br><font class=fnName>AG_WidgetSetPosition()</font> sets the effective position of the widget relative to its parent container.
+<font class=fnName>AG_WidgetSetSize()</font> sets the size of the widget in pixels.
+<font class=fnName>AG_WidgetSetGeometry()</font> sets both position and size of a widget from the specified
+<font class=ft><b>AG_Rect</b></font>. These functions are typically only used in the context of the
+<font class=fnName>size_request()</font> and
+<font class=fnName>size_allocate()</font> routines of container widgets.
+<br><br><font class=fnName>AG_WidgetUpdate()</font> requests an update of the computed coordinates and geometries of all widgets
+attached to the widget's current window.
+The widget may or may not be attached to a parent window (the actual update
+will be performed later, before rendering starts in
+<font class=fnName>AG_WindowDraw()</font>). <font class=fnName>AG_WidgetUpdate()</font> should be called following
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_ObjectAttach.3&amp;printable=y">AG_ObjectAttach(3)</a> or
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_ObjectDetach.3&amp;printable=y">AG_ObjectDetach(3)</a> calls made in event context, or manual modifications of the
+<var class=va>x</var>, <var class=va>y</var>, <var class=va>w</var>, <var class=va>h</var> fields of the
+<font class=nm>AG_Widget</font> structure.
+</td></tr></table><a name="INPUT_STATE"></a>
+<hr>
+<h1 class=mansection>INPUT STATE</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px"><tr><td><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetEnable"></a><font class=fnSpec>AG_WidgetEnable (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetDisable"></a><font class=fnSpec>AG_WidgetDisable (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetEnabled"></a><font class=fnSpec>AG_WidgetEnabled (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetDisabled"></a><font class=fnSpec>AG_WidgetDisabled (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br></td></tr></table><br>The "enabled" flag of a widget determines whether the user is allowed to modify
+whatever data the widget is accessing.
+The interpretation of this flag is widget-specific.
+<font class=fnName>AG_WidgetEnable()</font> sets the flag,
+<font class=fnName>AG_WidgetDisable()</font> clears it.
+These functions will raise the
+ <font class=pref>widget-enabled</font> and
+ <font class=pref>widget-disabled</font> events accordingly.
+<br><br>The functions
+<font class=fnName>AG_WidgetEnabled()</font> and
+<font class=fnName>AG_WidgetDisabled()</font> return the current "enabled" state of the widget.
+The
+<font class=nm>AG_Widget</font> object must be locked when the call is made.
+</td></tr></table><a name="FOCUS_STATE"></a>
+<hr>
+<h1 class=mansection>FOCUS STATE</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+The focus state of widgets enables the reception of specific types of
+events which are filtered by default.
+The focus state also affects the behavior and appearance of some widgets.
+A widget holding focus (in a currently focused window) will receive mouse
+events
+<font class=fnName>mouse-motion()</font>, <font class=fnName>mouse-button-up()</font>, as well as keyboard events
+<font class=fnName>key-up()</font> and
+<font class=fnName>key-down()</font> (note that unfocused widgets can be configured to receive those events
+unfiltered as well using the
+<font class=dv>AG_WIDGET_UNFOCUSED_*</font> options).
+<br><br><table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px"><tr><td><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetSetFocusable"></a><font class=fnSpec>AG_WidgetSetFocusable (<font class=fnArgs>AG_Widget *widget, int enable</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetFocus"></a><font class=fnSpec>AG_WidgetFocus (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetUnfocus"></a><font class=fnSpec>AG_WidgetUnfocus (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetIsFocused"></a><font class=fnSpec>AG_WidgetIsFocused (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetIsFocusedInWindow"></a><font class=fnSpec>AG_WidgetIsFocusedInWindow (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetForwardFocus"></a><font class=fnSpec>AG_WidgetForwardFocus (<font class=fnArgs>AG_Widget *widget, AG_Widget *widgetToFocus</font>)</font><br><br></td></tr></table><br><font class=fnName>AG_WidgetSetFocusable()</font> sets the
+<font class=dv>AG_WIDGET_FOCUSABLE</font> flag which allows the widget to receive focus (0 = ignore, 1 = accept focus).
+Returns the previous setting.
+<br><br><font class=fnName>AG_WidgetFocus()</font> gives focus to the specified widget and all of its parent widgets including
+the parent
+<a class=xr href="mdoc.cgi@man=AG_Window.3&amp;printable=y.html">AG_Window(3)</a>. Returns 1 on success and 0 if the widget is not accepting focus.
+<br><br><font class=fnName>AG_WidgetUnfocus()</font> removes the focus state from the given widget (including its child widgets,
+if any).
+<br><br><font class=fnName>AG_WidgetIsFocused()</font> returns 1 if the widget is currently holding focus (i.e., the widget
+has the focus flag set, and its parent window, if any, is focused as
+well).
+<font class=fnName>AG_WidgetIsFocusedInWindow()</font> returns 1 if the widget has the focus flag set (without evaluating the
+focus state of any parent windows).
+<br><br><font class=fnName>AG_WidgetForwardFocus()</font> arranges automatic forwarding of the focus to a specified widget.
+Whenever
+<var class=fa>AG_WidgetFocus</var> will be invoked on
+<var class=fa>widget</var>, the focus will be given to
+<var class=fa>widgetToFocus</var> instead.
+</td></tr></table><a name="COORDINATES"></a>
+<hr>
+<h1 class=mansection>COORDINATES</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px"><tr><td><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetArea"></a><font class=fnSpec>AG_WidgetArea (<font class=fnArgs>AG_Widget *widget, int x, int y</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetRelativeArea"></a><font class=fnSpec>AG_WidgetRelativeArea (<font class=fnArgs>AG_Widget *widget, int x, int y</font>)</font><br><br></td></tr></table><br>The
+<font class=fnName>AG_WidgetArea()</font> routine tests whether view coordinates
+<var class=fa>x</var> and
+<var class=fa>y</var> lie inside of the widget's allocated space.
+The
+<font class=fnName>AG_WidgetRelativeArea()</font> variant accepts widget coordinates.
+</td></tr></table><a name="BLITTING_SURFACES"></a>
+<hr>
+<h1 class=mansection>BLITTING SURFACES</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+These routines allow graphical surfaces to be managed (mapped in hardware or
+software) and efficiently copied.
+They must be called from Rendering Context (i.e., the
+<font class=fnName>draw()</font> operation of
+<font class=nm>AG_Widget</font>) only.
+<br><br><table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px"><tr><td><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetBlit"></a><font class=fnSpec>AG_WidgetBlit (<font class=fnArgs>AG_Widget *widget, AG_Surface *src, int x, int y</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetMapSurface"></a><font class=fnSpec>AG_WidgetMapSurface (<font class=fnArgs>AG_Widget *widget, AG_Surface *su</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetMapSurfaceNODUP"></a><font class=fnSpec>AG_WidgetMapSurfaceNODUP (<font class=fnArgs>AG_Widget *widget, AG_Surface *su</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetReplaceSurface"></a><font class=fnSpec>AG_WidgetReplaceSurface (<font class=fnArgs>AG_Widget *widget, int surface_id, AG_Surface *newSurface</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetReplaceSurfaceNODUP"></a><font class=fnSpec>AG_WidgetReplaceSurfaceNODUP (<font class=fnArgs>AG_Widget *widget, int surface_id, AG_Surface *newSurface</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetUnmapSurface"></a><font class=fnSpec>AG_WidgetUnmapSurface (<font class=fnArgs>AG_Widget *widget, int surface_id</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetUpdateSurface"></a><font class=fnSpec>AG_WidgetUpdateSurface (<font class=fnArgs>AG_Widget *widget, int surface_id</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetBlitFrom"></a><font class=fnSpec>AG_WidgetBlitFrom (<font class=fnArgs>AG_Widget *dstWidget, AG_Widget *srcWidget, int surface_id, AG_Rect *rs, int x, int y</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetBlitSurface"></a><font class=fnSpec>AG_WidgetBlitSurface (<font class=fnArgs>AG_Widget *widget, int surface_id, int x, int y</font>)</font><br><br></td></tr></table><br>The
+<font class=fnName>AG_WidgetBlit()</font> function performs a software-&gt;hardware blit from the surface
+<var class=fa>src</var> to the video display at the given widget coordinates.
+<font class=fnName>AG_WidgetBlit()</font> must invoked in Rendering Context.
+See
+<a class=xr href="mdoc.cgi@man=AG_Surface.3&amp;printable=y.html">AG_Surface(3)</a> for more information on the Agar surface structure.
+<br><br>Software to hardware blits are slow, so the widget system provides an
+interface to efficiently take advantage of graphics hardware where it
+is available.
+<font class=fnName>AG_WidgetMapSurface()</font> registers the specified
+<a class=xr href="mdoc.cgi@man=AG_Surface.3&amp;printable=y.html">AG_Surface(3)</a> with the widget, returning an integer handle to that surface.
+The surface can be subsequently rendered by calling
+<font class=fnName>AG_WidgetBlitSurface()</font> or
+<font class=fnName>AG_WidgetBlitFrom()</font> using this handle.
+The exact manner in which the surface is rendered depends on the Agar
+driver in use.
+For OpenGL-based drivers, a matching hardware texture will typically be
+generated for the surface on the first call to
+<font class=fnName>AG_WidgetBlitSurface()</font>, and cached.
+<br><br>By default, mapped surfaces are automatically freed once the widget
+is destroyed.
+The
+<font class=fnName>AG_WidgetMapSurfaceNODUP()</font> variant sets the "NODUP" flag on the given surface, so the widget system
+will never attempt to free the surface.
+<br><br>Note that
+<font class=fnName>AG_WidgetMapSurface()</font> will never duplicate the surface.
+The function merely registers the provided surface pointer with the widget
+structure.
+The surface pointer must remain valid for the lifetime of the widget (if in
+doubt, use
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_SurfaceDup.3&amp;printable=y">AG_SurfaceDup(3)</a>). <br><br>Under multithreading,
+<font class=fnName>AG_WidgetMapSurface()</font> may be invoked from any context, but the returned name is only valid as
+long as the widget is locked (see
+<a class=xr href="mdoc.cgi@man=AG_ObjectLock.3&amp;printable=y.html">AG_ObjectLock(3)</a>). <br><br><font class=fnName>AG_WidgetReplaceSurface()</font> replaces the contents of a previously-mapped surface with the contents of
+<var class=fa>newSurface</var>. The
+<font class=fnName>AG_WidgetReplaceSurfaceNODUP()</font> variant avoids duplicating the surface.
+<br><br><font class=fnName>AG_WidgetUnmapSurface()</font> destroys the given surface mapping.
+It is equivalent to invoking
+<font class=fnName>AG_WidgetReplaceSurface()</font> with a NULL surface.
+The function is safe to use from any context.
+<br><br>It is important to note that in OpenGL mode,
+<font class=fnName>AG_WidgetReplaceSurface()</font> and
+<font class=fnName>AG_WidgetUnmapSurface()</font> will not immediately delete any previous texture associated with the previous
+surface.
+Instead, it will queue the delete operation for future execution from
+Rendering Context, as required by thread safety.
+<br><br>The
+<font class=fnName>AG_WidgetUpdateSurface()</font> function should be invoked whenever a mapped surface is changed.
+If hardware surfaces are supported, it will cause an upload of the software
+surface to the hardware (otherwise it is a no-op).
+<br><br>The
+<font class=fnName>AG_WidgetBlitFrom()</font> function renders a previously mapped (possibly hardware) surface from the
+source widget
+<var class=fa>srcWidget</var> (using source rectangle
+<var class=fa>rs</var>) onto the destination widget
+<var class=fa>dstWidget</var>, at coordinates
+<var class=fa>x</var>, <var class=fa>y</var>. This function must be invoked in Rendering Context.
+<br><br>The
+<font class=fnName>AG_WidgetBlitSurface()</font> variant invokes
+<var class=fa>AG_WidgetBlitFrom</var> with the same argument for both
+<var class=fa>srcWidget</var> and
+<var class=fa>dstWidget</var> (and
+<var class=fa>rs</var> set to NULL).
+</td></tr></table><a name="BINDINGS"></a>
+<hr>
+<h1 class=mansection>BINDINGS</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+Widget states can be bound to memory locations containing data in a
+supported format.
+For example, the "state" binding of
+<a class=xr href="mdoc.cgi@man=AG_Button.3&amp;printable=y.html">AG_Button(3)</a> can be tied to an integer (or bits in an integer), such that the user pressing
+the button directly manipulates the integer value in memory.
+<br><br>Bindings are documented under the
+ <font class=pref>BINDINGS</font> section of the widget's manual page.
+For instance,
+<a class=xr href="mdoc.cgi@man=AG_Slider.3&amp;printable=y.html">AG_Slider(3)</a> mentions "value" bindings to integers.
+Therefore, to control a byte of memory, one might use:
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px; margin-top:10px"><tr><td><pre>	static Uint8 myByte = 0;
+
+	AG_Slider *slider = AG_SliderNew(window, AG_SLIDER_HORIZ, 0);
+	AG_BindUint8(slider, "value", &amp;myByte);
+</pre></td></tr></table><br>Or alternatively, using a shorthand constructor:
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px; margin-top:10px"><tr><td><pre>	AG_SliderNewUint8(window, AG_SLIDER_HORIZ, 0, &amp;myByte, NULL, NULL);
+</pre></td></tr></table><br>This method is not limited to primitive data types.
+For example,
+<a class=xr href="mdoc.cgi@man=AG_Textbox.3&amp;printable=y.html">AG_Textbox(3)</a> can bind to a fixed-size memory buffer containing a C string in ASCII,
+UTF-8 or other supported encoding.
+<br><br>The
+<font class=fnName>AG_Bind&lt;Type&gt;()</font> family of functions bind widget states to memory data.
+The
+<font class=fnName>AG_Bind&lt;Type&gt;Mp()</font> variants accept a pointer to a mutex which will be acquired prior to accessing
+the data.
+The
+<font class=fnName>AG_Bind&lt;Type&gt;Fn()</font> variants accept a pointer to a function instead of a memory location
+(the widget state will then be obtained by evaluating that function).
+<br><br>Note: The
+<a class=xr href="mdoc.cgi@man=AG_Variable.3&amp;printable=y.html">AG_Variable(3)</a> API is actually part of
+<a class=xr href="mdoc.cgi@man=AG_Object.3&amp;printable=y.html">AG_Object(3)</a>, and is not GUI-specific.
+It can be useful in non-GUI applications as well.
+<br><br>Since the state of a widget can influence its appearance
+(e.g.,
+<a class=xr href="mdoc.cgi@man=AG_Button.3&amp;printable=y.html">AG_Button(3)</a> is drawn as a pressed button if its "state" is 1), it may be necessary to
+monitor the value and redraw when it changes.
+<font class=fnName>AG_RedrawOnChange()</font> arranges for this to occur automatically (see below).
+</td></tr></table><a name="CONTROLLING_REDRAW"></a>
+<hr>
+<h1 class=mansection>CONTROLLING REDRAW</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px"><tr><td><br><font class=ft><b>void</b></font> <a class=fnName name="AG_Redraw"></a><font class=fnSpec>AG_Redraw (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_RedrawOnChange"></a><font class=fnSpec>AG_RedrawOnChange (<font class=fnArgs>AG_Widget *widget, int refresh_ms, const char *binding_name</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_RedrawOnTick"></a><font class=fnSpec>AG_RedrawOnTick (<font class=fnArgs>AG_Widget *widget, int refresh_ms</font>)</font><br><br></td></tr></table><br>The
+<font class=fnName>AG_Redraw()</font> function signals that the widget must be redrawn to the video display.
+It is equivalent to setting the
+<var class=va>dirty</var> variable of the widget's parent window to 1.
+If called from Rendering Context,
+<font class=fnName>AG_Redraw()</font> is a no-op.
+<br><br>The
+<font class=fnName>AG_RedrawOnChange()</font> function arranges for the widget to be automatically redrawn whenever the
+value associated with the existing binding
+<var class=fa>binding_name</var> changes.
+The value of the binding will be checked at the specified interval
+<var class=fa>refresh_ms</var> in milliseconds.
+If a
+<var class=fa>refresh_ms</var> argument of -1 is passed, the effect of any previous
+<font class=fnName>AG_RedrawOnChange()</font> call with the specified binding is disabled.
+<br><br>The
+<font class=fnName>AG_RedrawOnTick()</font> function arranges for the widget to be unconditionally redrawn at the
+specified interval in milliseconds.
+If a
+<var class=fa>refresh_ms</var> argument of -1 is passed, the effect of any previous
+<font class=fnName>AG_RedrawOnTick()</font> call is disabled.
+</td></tr></table><a name="WIDGET_QUERIES"></a>
+<hr>
+<h1 class=mansection>WIDGET QUERIES</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px"><tr><td><br><font class=ft><b>AG_Window *</b></font> <a class=fnName name="AG_ParentWindow"></a><font class=fnSpec>AG_ParentWindow (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>AG_Widget *</b></font> <a class=fnName name="AG_WidgetFind"></a><font class=fnSpec>AG_WidgetFind (<font class=fnArgs>AG_Driver *drv, const char *path</font>)</font><br><br><font class=ft><b>AG_Widget *</b></font> <a class=fnName name="AG_WidgetFindFocused"></a><font class=fnSpec>AG_WidgetFindFocused (<font class=fnArgs>AG_Window *win</font>)</font><br><br><font class=ft><b>AG_Widget *</b></font> <a class=fnName name="AG_WidgetFindPoint"></a><font class=fnSpec>AG_WidgetFindPoint (<font class=fnArgs>const char *className, int x, int y</font>)</font><br><br><font class=ft><b>AG_Widget *</b></font> <a class=fnName name="AG_WidgetFindRect"></a><font class=fnSpec>AG_WidgetFindRect (<font class=fnArgs>const char *className, int x, int y, int w, int h</font>)</font><br><br></td></tr></table><br><font class=fnName>AG_ParentWindow()</font> returns a pointer to the parent
+<a class=xr href="mdoc.cgi@man=AG_Window.3&amp;printable=y.html">AG_Window(3)</a> for the given widget instance.
+The pointer is valid only as long as the parent VFS remains locked.
+If the widget is not attached, NULL is returned.
+<br><br><font class=fnName>AG_WidgetFind()</font> locates a widget instance by name, where
+<var class=fa>path</var> is a
+ <font class=pref>&quot; / &quot; </font>separated path name relative to the
+<a class=xr href="mdoc.cgi@man=AG_Driver.3&amp;printable=y.html">AG_Driver(3)</a> VFS root, for example: "My Window/Box #1/My button".
+If the widget exists, the function returns a pointer to the
+<font class=nm>AG_Widget</font> instance.
+The returned pointer is valid only as long as the parent VFS remains locked.
+<br><br><font class=fnName>AG_WidgetFindFocused()</font> returns the top-most focused widget under
+<var class=fa>win</var>. <br><br><font class=fnName>AG_WidgetFindPoint()</font> returns the top-most widget at display coordinates
+<var class=fa>x</var>, <var class=fa>y</var>, which also is an instance of a the given
+<var class=fa>className</var> (see
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_ObjectClass.3&amp;printable=y">AG_ObjectClass(3)</a>, <a class=xr href="http://libagar.org/mdoc.cgi?man=AG_OfClass.3&amp;printable=y">AG_OfClass(3)</a>). The
+<font class=fnName>AG_WidgetFindRect()</font> variant requires that the widget enclose the whole given rectangle.
+<br><br>Similarly to
+<font class=fnName>AG_WidgetFind()</font>, the
+<font class=nm>AG_Widget</font> pointer returned by
+<font class=fnName>AG_WidgetFindFocused()</font>, <font class=fnName>AG_WidgetFindPoint()</font> and
+<font class=fnName>AG_WidgetFindRect()</font> should be considered valid only for as long as the parent VFS is locked.
+</td></tr></table><a name="RENDERING_CONTROL"></a>
+<hr>
+<h1 class=mansection>RENDERING CONTROL</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px"><tr><td><br><font class=ft><b>void</b></font> <a class=fnName name="AG_PushClipRect"></a><font class=fnSpec>AG_PushClipRect (<font class=fnArgs>AG_Widget *widget, AG_Rect r</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_PopClipRect"></a><font class=fnSpec>AG_PopClipRect (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetDraw"></a><font class=fnSpec>AG_WidgetDraw (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_BeginRendering"></a><font class=fnSpec>AG_BeginRendering (<font class=fnArgs>AG_Driver *drv</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_EndRendering"></a><font class=fnSpec>AG_EndRendering (<font class=fnArgs>AG_Driver *drv</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetHide"></a><font class=fnSpec>AG_WidgetHide (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetShow"></a><font class=fnSpec>AG_WidgetShow (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetHideAll"></a><font class=fnSpec>AG_WidgetHideAll (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_WidgetShowAll"></a><font class=fnSpec>AG_WidgetShowAll (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_WidgetVisible"></a><font class=fnSpec>AG_WidgetVisible (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br><font class=ft><b>AG_Surface *</b></font> <a class=fnName name="AG_WidgetSurface"></a><font class=fnSpec>AG_WidgetSurface (<font class=fnArgs>AG_Widget *widget</font>)</font><br><br></td></tr></table><br>The
+<font class=fnName>AG_PushClipRect()</font> function pushes a rectangle (in widget coordinates) onto the stack of
+clipping rectangles, and
+<font class=fnName>AG_PopClipRect()</font> pops the last entry from the clipping rectangle stack.
+The effective clipping rectangle will be the intersection of all rectangles
+on this stack.
+<font class=fnName>AG_PushClipRect()</font> and
+<font class=fnName>AG_PopClipRect()</font> must be invoked in Rendering Context.
+<br><br>The
+<font class=fnName>AG_WidgetDraw()</font> routine renders a widget to the display.
+It is typically invoked from an event loop routine (such as
+<a class=xr href="mdoc.cgi@man=AG_EventLoop.3&amp;printable=y.html">AG_EventLoop(3)</a>), to recursively draw the hierarchy of visible GUI elements.
+<br><br>In the event loop,
+<font class=fnName>AG_WidgetDraw()</font> invocations must be enclosed between calls to
+<font class=fnName>AG_BeginRendering()</font> and
+<font class=fnName>AG_EndRendering()</font>. <br><br>The
+<font class=fnName>AG_WidgetHide()</font> and
+<font class=fnName>AG_WidgetShow()</font> functions toggle the visibility of the specified widget (setting the
+<font class=dv>AG_WIDGET_HIDE</font> flag as appropriate).
+<br><br>The
+<font class=fnName>AG_WidgetHideAll()</font> and
+<font class=fnName>AG_WidgetShowAll()</font> routines toggle the visibility of the specified widget and its children
+by setting the
+<font class=dv>AG_WIDGET_VISIBLE</font> flag (which works independently of
+<font class=dv>AG_WIDGET_HIDE</font>). These routines are intended to be used by container widgets (for example,
+<a class=xr href="mdoc.cgi@man=AG_Notebook.3&amp;printable=y.html">AG_Notebook(3)</a> which needs to show or hide tabbed containers).
+<br><br><font class=fnName>AG_WidgetVisible()</font> returns 1 if the widget is currently visible (equivalent to checking the
+<font class=dv>AG_WIDGET_VISIBLE</font> flag).
+<br><br>The
+<font class=fnName>AG_WidgetSurface()</font> routine renders the widget to a newly-allocated
+<a class=xr href="mdoc.cgi@man=AG_Surface.3&amp;printable=y.html">AG_Surface(3)</a>. This surface should be freed after use.
+</td></tr></table><a name="STYLE_PROPERTIES"></a>
+<hr>
+<h1 class=mansection>STYLE PROPERTIES</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+Presentation settings such as fonts and colors are stored as named
+<a class=xr href="mdoc.cgi@man=AG_Variable.3&amp;printable=y.html">AG_Variable(3)</a> properties (e.g., "font-size", "color", "color#hover", etc.)
+Those properties should be set using the following functions:
+<br><br><table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px"><tr><td><br><font class=ft><b>void</b></font> <a class=fnName name="AG_SetFont"></a><font class=fnSpec>AG_SetFont (<font class=fnArgs>AG_Widget *widget, const AG_Font *font</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_SetStyle"></a><font class=fnSpec>AG_SetStyle (<font class=fnArgs>AG_Widget *widget, const char *which, const char *value</font>)</font><br><br></td></tr></table><br>The
+<font class=fnName>AG_SetFont()</font> function sets the widget's default font attributes to match those of the
+specified font object.
+<br><br>The
+<font class=fnName>AG_SetStyle()</font> function sets the specified style attribute to the given value.
+
+
+
+Accepted attributes are as follows:
+<br><table border=0 cellspacing=0 cellpadding=0 class=mdocTagTbl><tr><td class=mdocTagListItem>font-family</td><td class=mdocTagListItem>Font face specification ("Courier", "Terminal").
+<tr><td class=mdocTagListItem>font-size</td><td class=mdocTagListItem>Font size in points ("10pts") or ratio ("50%").
+<tr><td class=mdocTagListItem>font-weight</td><td class=mdocTagListItem>Font weight, either "bold" or "normal".
+<tr><td class=mdocTagListItem>font-style</td><td class=mdocTagListItem>Font style, either "italic" or "normal".
+<tr><td class=mdocTagListItem>color</td><td class=mdocTagListItem>Main color of the widget.
+Colors may be specified as unsigned 8-bit components with "rgb(r,g,b[,a])",
+or floating-point HSV parameters with "hsv(h,s,v[,a])".
+In either mode, components may be expressed as a ratio to the parent widget's
+color components by appending a "%".
+<tr><td class=mdocTagListItem>text-color</td><td class=mdocTagListItem>Color for rendered text.
+<tr><td class=mdocTagListItem>line-color</td><td class=mdocTagListItem>Color for line drawings.
+<tr><td class=mdocTagListItem>shape-color</td><td class=mdocTagListItem>Color for polygons and other filled shapes.
+<tr><td class=mdocTagListItem>border-color</td><td class=mdocTagListItem>Color for cosmetic borders.
+</td></tr></table><br>An optional selector may be appended to the attribute names.
+Accepted selectors include "#disabled", "#hover" and "#selected".
+Selectors may be interpreted differently on a per-widget basis.
+</td></tr></table><a name="STANDARD_WIDGET_ACTIONS"></a>
+<hr>
+<h1 class=mansection>STANDARD WIDGET ACTIONS</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+User-generated events such as key presses or mouse button events can be
+tied to
+<font class=em>actions</font>, such as executing a specified routine or controlling
+a boolean variable.
+Registered actions are described by the
+<var class=fa>AG_Action</var> structure.
+<br><br>Where the conditions for execution of an Action are fixed (e.g., a specific
+mouse button was clicked, or a specific key was pressed), use of
+<font class=fnName>AG_ActionOn*()</font> is preferred over low-level event handlers
+(such as "key-down" or "mouse-button-down"), because it allows keyboard
+and mouse bindings to be configured by the end-user in a standard way.
+<a class=xr href="mdoc.cgi@man=AG_Menu.3&amp;printable=y.html">AG_Menu(3)</a> also provides interfaces for working with widget actions.
+<br><br>
+<table border=0 cellspacing=0 style="margin-left:16pxmargin-bottom:0; border:solid;border-width:2px;border-color:#c0c0c0; background-color:#d8d8d8; padding-left:10px; padding-right:10px"><tr><td><br><font class=ft><b>AG_Action *</b></font> <a class=fnName name="AG_ActionFn"></a><font class=fnSpec>AG_ActionFn (<font class=fnArgs>AG_Widget *widget, const char *action, void (*fn)(AG_Event *), const char *fnArgs, ...</font>)</font><br><br><font class=ft><b>AG_Action *</b></font> <a class=fnName name="AG_ActionSetInt"></a><font class=fnSpec>AG_ActionSetInt (<font class=fnArgs>AG_Widget *widget, const char *action, int *variable, int value</font>)</font><br><br><font class=ft><b>AG_Action *</b></font> <a class=fnName name="AG_ActionSetFlag"></a><font class=fnSpec>AG_ActionSetFlag (<font class=fnArgs>AG_Widget *widget, const char *action, Uint *variable, Uint bitmask, int value</font>)</font><br><br><font class=ft><b>AG_Action *</b></font> <a class=fnName name="AG_ActionToggleInt"></a><font class=fnSpec>AG_ActionToggleInt (<font class=fnArgs>AG_Widget *widget, const char *action, int *variable</font>)</font><br><br><font class=ft><b>AG_Action *</b></font> <a class=fnName name="AG_ActionToggleFlag"></a><font class=fnSpec>AG_ActionToggleFlag (<font class=fnArgs>AG_Widget *widget, const char *action, Uint *variable, Uint bitmask</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_ActionOnButtonDown"></a><font class=fnSpec>AG_ActionOnButtonDown (<font class=fnArgs>AG_Widget *widget, int button, const char *action</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_ActionOnButtonUp"></a><font class=fnSpec>AG_ActionOnButtonUp (<font class=fnArgs>AG_Widget *widget, int button, const char *action</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_ActionOnKeyDown"></a><font class=fnSpec>AG_ActionOnKeyDown (<font class=fnArgs>AG_Widget *widget, AG_KeySym sym, AG_KeyMod mod, const char *action</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_ActionOnKeyUp"></a><font class=fnSpec>AG_ActionOnKeyUp (<font class=fnArgs>AG_Widget *widget, AG_KeySym sym, AG_KeyMod mod, const char *action</font>)</font><br><br><font class=ft><b>void</b></font> <a class=fnName name="AG_ActionOnKey"></a><font class=fnSpec>AG_ActionOnKey (<font class=fnArgs>AG_Widget *widget, AG_KeySym sym, AG_KeyMod mod, const char *action</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_ExecMouseAction"></a><font class=fnSpec>AG_ExecMouseAction (<font class=fnArgs>AG_Widget *widget, AG_ActionEventType type, int button, int x, int y</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_ExecKeyAction"></a><font class=fnSpec>AG_ExecKeyAction (<font class=fnArgs>AG_Widget *widget, AG_ActionEventType type, AG_KeySym sym, AG_KeyMod mod</font>)</font><br><br><font class=ft><b>int</b></font> <a class=fnName name="AG_ExecAction"></a><font class=fnSpec>AG_ExecAction (<font class=fnArgs>AG_Widget *widget, AG_Action *a</font>)</font><br><br></td></tr></table><br><font class=fnName>AG_ActionFn()</font> registers a new widget action which is to invoke a callback function
+<var class=fa>fn</var>, with arguments
+<var class=fa>fnArgs</var>. See
+<a class=xr href="mdoc.cgi@man=AG_Event.3&amp;printable=y.html">AG_Event(3)</a> for a description of the
+<var class=fa>fnArgs</var> format.
+<br><br><font class=fnName>AG_ActionSetInt()</font> registers a new action which is to set an integer
+<var class=fa>variable</var> to a specified
+<var class=fa>value</var>. Instead of an integer variable,
+<font class=fnName>AG_ActionSetFlag()</font> sets the bits specified by
+<var class=fa>bitmask</var> to the specified
+<var class=fa>value</var> (of 1 or 0).
+The
+<font class=fnName>AG_ActionToggleInt()</font> and
+<font class=fnName>AG_ActionToggleFlag()</font> variants do not take an explicit
+<var class=fa>value</var> argument, and toggle the current value instead.
+<br><br><font class=fnName>AG_ActionOnButtonDown()</font> and
+<font class=fnName>AG_ActionOnButtonUp()</font> tie an action to a button press and a button release event, respectively.
+The
+<var class=fa>button</var> argument specifies the button index (see
+<a class=xr href="mdoc.cgi@man=AG_MouseButton.3&amp;printable=y.html">AG_MouseButton(3)</a>). <font class=fnName>AG_ActionOnKeyDown()</font> and
+<font class=fnName>AG_ActionOnKeyUp()</font> tie an action to a key press and key release event, respectively.
+The
+<var class=fa>sym</var> argument specifies the key (see
+<a class=xr href="mdoc.cgi@man=AG_KeySym.3&amp;printable=y.html">AG_KeySym(3)</a>), and
+<var class=fa>mod</var> specifies the modifier keys which must be in effect.
+To match any key or any modifier state,
+<font class=dv>AG_KEY_ANY</font> or
+<font class=dv>AG_KEYMOD_ANY</font> can be used.
+<br><br>With
+<font class=fnName>AG_ActionOnKeyDown()</font> and
+<font class=fnName>AG_ActionOnKeyUp()</font>, the action is triggered once immediately on key press or key release.
+The
+<font class=fnName>AG_ActionOnKey()</font> variant ties an action to a key press, but with "key repeat" behavior.
+The action is triggered immediately once after an initial key press.
+If the key combination is held longer than the "key delay" (by default 250ms),
+the event is repeated with the "key repeat" interval (by default 30ms).
+<br><br>If there are currently no event handlers registered for "key-up", "key-down",
+"mouse-button-up" and "mouse-button-down", the
+<font class=fnName>AG_ActionOn*()</font> functions automatically register event handlers which will invoke
+<font class=fnName>AG_ExecMouseAction()</font> or
+<font class=fnName>AG_ExecKeyAction()</font> as appropriate (see below).
+<br><br><font class=fnName>AG_ExecMouseAction()</font> executes any action associated with mouse button events.
+It is typically invoked from the "mouse-button-down" and "mouse-button-up"
+event handlers of the widget.
+Accepted
+<var class=fa>type</var> values are
+<font class=dv>AG_ACTION_ON_BUTTONDOWN</font> and
+<font class=dv>AG_ACTION_ON_BUTTONUP</font>. <var class=fa>button</var> is the pressed button index (see
+<a class=xr href="mdoc.cgi@man=AG_MouseButton.3&amp;printable=y.html">AG_MouseButton(3)</a>). <var class=fa>x</var> and
+<var class=fa>y</var> is the position of the cursor in the widget's coordinate system.
+<br><br><font class=fnName>AG_ExecKeyAction()</font> executes any action associated with keyboard events.
+It is typically invoked from the "key-down" and "key-up"
+event handlers of the widget.
+Accepted
+<var class=fa>type</var> values are
+<font class=dv>AG_ACTION_ON_KEYDOWN</font> and
+<font class=dv>AG_ACTION_ON_KEYUP</font>. <var class=fa>sym</var> and
+<var class=fa>mod</var> specify the key index and modifier state (see
+<a class=xr href="mdoc.cgi@man=AG_KeySym.3&amp;printable=y.html">AG_KeySym(3)</a> and
+<a class=xr href="mdoc.cgi@man=AG_KeyMod.3&amp;printable=y.html">AG_KeyMod(3)</a>). <br><br><font class=fnName>AG_ExecAction()</font> executes the specified action.
+<font class=fnName>AG_ExecAction()</font> is rarely used directly, but it is invoked internally by the
+<font class=fnName>AG_ExecFooAction()</font> functions.
+</td></tr></table><a name="EVENTS"></a>
+<hr>
+<h1 class=mansection>EVENTS</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+The GUI system may send
+<font class=nm>AG_Widget</font> objects the following events:
+<br><table border=0 cellspacing=0 cellpadding=0 class=mdocTagTbl><tr><td class=mdocTagListItem><font class=fnSpec>widget-shown (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>The widget is now visible.
+NOTE: Handlers for this event should be set using
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_AddEvent.3&amp;printable=y">AG_AddEvent(3)</a> as opposed to
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_SetEvent.3&amp;printable=y">AG_SetEvent(3)</a>. <tr><td class=mdocTagListItem><font class=fnSpec>widget-hidden (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>The widget is no longer visible.
+NOTE: Handlers for this event should be set using
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_AddEvent.3&amp;printable=y">AG_AddEvent(3)</a> as opposed to
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_SetEvent.3&amp;printable=y">AG_SetEvent(3)</a>. <tr><td class=mdocTagListItem><font class=fnSpec>widget-enabled (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>Input state has been enabled with
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_WidgetEnable.3&amp;printable=y">AG_WidgetEnable(3)</a>. <tr><td class=mdocTagListItem><font class=fnSpec>widget-disabled (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>Input state has been disabled with
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_WidgetDisable.3&amp;printable=y">AG_WidgetDisable(3)</a>. <tr><td class=mdocTagListItem><font class=fnSpec>widget-moved (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>The widget (or one of its parents) has been moved.
+<tr><td class=mdocTagListItem><font class=fnSpec>widget-gainfocus (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>The widget now holds focus inside its parent container.
+<tr><td class=mdocTagListItem><font class=fnSpec>widget-lostfocus (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>The widget no longer holds focus.
+<tr><td class=mdocTagListItem><font class=fnSpec>widget-reshape (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>Widget size has changed and
+<font class=dv>USE_OPENGL</font> is set (and the
+<font class=dv>GL_PROJECTION</font> or
+<font class=dv>GL_MODELVIEW</font> matrices may need to be updated).
+<tr><td class=mdocTagListItem><font class=fnSpec>widget-overlay (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>Invoked following the
+<font class=fnName>draw()</font> operation; requires
+<font class=dv>USE_OPENGL</font>. <tr><td class=mdocTagListItem><font class=fnSpec>widget-underlay (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>Invoked prior to the
+<font class=fnName>draw()</font> operation; requires
+<font class=dv>USE_OPENGL</font>. <tr><td class=mdocTagListItem><font class=fnSpec>widget-drawn (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>Invoked prior to the
+<font class=fnName>draw()</font> operation; requires
+<font class=dv>USE_DRAWN</font>. <tr><td class=mdocTagListItem><font class=fnSpec>font-changed (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>The default font associated with the widget has changed.
+The new font may be accessed via the
+<var class=va>font</var> structure member.
+</td></tr></table><br>The following events are usually generated by input devices:
+<br><table border=0 cellspacing=0 cellpadding=0 class=mdocTagTbl><tr><td class=mdocTagListItem><font class=fnSpec>mouse-motion (<font class=fnArgs>int x, int y, int xRel, int yRel, int buttons</font>)</font><br></td><td class=mdocTagListItem>The widget is receiving mouse motion events, and the cursor has been moved.
+<var class=fa>x</var> and
+<var class=fa>y</var> are the coordinates of the cursor in the widget's local coordinate system
+(these coordinates may be negative or exceed the widget's dimensions if the
+cursor is not in the widget's area).
+<var class=fa>xRel</var> and
+<var class=fa>yRel</var> represent the displacement relative to the last position of the mouse cursor.
+The
+<var class=fa>buttons</var> argument is a bitmask representing the state of mouse buttons (see
+<a class=xr href="mdoc.cgi@man=AG_MouseButton.3&amp;printable=y.html">AG_MouseButton(3)</a>). <tr><td class=mdocTagListItem><font class=fnSpec>mouse-button-up (<font class=fnArgs>int button, int x, int y</font>)</font><br></td><td class=mdocTagListItem>The widget is receiving mouse button release events, and
+<var class=fa>button</var> has been released.
+<var class=fa>x</var> and
+<var class=fa>y</var> are the cursor coordinates in the widget's local coordinate system.
+<tr><td class=mdocTagListItem><font class=fnSpec>mouse-button-down (<font class=fnArgs>int button, int x, int y</font>)</font><br></td><td class=mdocTagListItem>The widget is receiving mouse button events, and
+<var class=fa>button</var> has been pressed.
+<var class=fa>x</var> and
+<var class=fa>y</var> are the cursor coordinates in the widget's local coordinate system.
+<tr><td class=mdocTagListItem><font class=fnSpec>mouse-over (<font class=fnArgs>void</font>)</font><br></td><td class=mdocTagListItem>The cursor has entered or is leaving the widget's allocated area and the
+<font class=dv>AG_WIDGET_USE_MOUSEOVER</font> option is set.
+<tr><td class=mdocTagListItem><font class=fnSpec>key-down (<font class=fnArgs>int key, int mod, Ulong unicode</font>)</font><br></td><td class=mdocTagListItem>The widget is receiving keyboard events and
+<var class=fa>key</var> has been pressed.
+The
+<var class=fa>mod</var> argument is a bitmask representing the state of the current key modifiers and
+<var class=fa>unicode</var> is the corresponding Unicode character in UCS-4 format (or 0 if there are none).
+See
+<a class=xr href="mdoc.cgi@man=AG_KeySym.3&amp;printable=y.html">AG_KeySym(3)</a> for details.
+<tr><td class=mdocTagListItem><font class=fnSpec>key-up (<font class=fnArgs>int key, int mod, Ulong unicode</font>)</font><br></td><td class=mdocTagListItem>The widget is receiving keyboard events and
+<var class=fa>key</var> has been released.
+The
+<var class=fa>mod</var> argument is a bitmask representing the state of the current key modifiers and
+<var class=fa>unicode</var> is the corresponding Unicode character in UCS-4 format (or 0 if there are none).
+See
+<a class=xr href="mdoc.cgi@man=AG_KeySym.3&amp;printable=y.html">AG_KeySym(3)</a> for details.
+</td></tr></table></td></tr></table><a name="STRUCTURE_DATA"></a>
+<hr>
+<h1 class=mansection>STRUCTURE DATA</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+For the
+<font class=ft><b>AG_Widget</b></font> object:
+<table border=0 cellspacing=0 cellpadding=0 class=mdocTagTbl><tr><td class=mdocTagListItem><font class=ft><b>Uint flags</b></font> </td><td class=mdocTagListItem>Option flags (see
+<a class=xr href="mdoc.cgi@man=AG_Widget.3&amp;printable=y.html#FLAGS">FLAGS</a> section below).
+<tr><td class=mdocTagListItem><font class=ft><b>int x, y</b></font> </td><td class=mdocTagListItem>Pixel coordinates of the widget relative to its parent.
+<tr><td class=mdocTagListItem><font class=ft><b>int w, h</b></font> </td><td class=mdocTagListItem>Dimensions of the widget in pixels.
+<tr><td class=mdocTagListItem><font class=ft><b>AG_Rect2 rView</b></font> </td><td class=mdocTagListItem>Absolute view coordinates of the widget (relative to the parent
+driver device).
+<tr><td class=mdocTagListItem><font class=ft><b>AG_Font *font</b></font> </td><td class=mdocTagListItem>Pointer to the effective font associated with the widget (see
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_Font.3&amp;printable=y">AG_Font(3)</a>). This setting is read-only (use
+<font class=fnName>AG_SetFont()</font> to change).
+</td></tr></table></td></tr></table><a name="FLAGS"></a>
+<hr>
+<h1 class=mansection>FLAGS</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+The
+<var class=va>flags</var> member of the
+<font class=nm>AG_Widget</font> structure accepts the following flags:
+<table border=0 cellspacing=0 cellpadding=0 class=mdocTagTbl><tr><td class=mdocTagListItem>AG_WIDGET_HFILL</td><td class=mdocTagListItem>Hint to container widgets that in a vertical packing, this widget can expand
+to fill all remaining space.
+<tr><td class=mdocTagListItem>AG_WIDGET_VFILL</td><td class=mdocTagListItem>Hint to container widgets that in a horizontal packing, this widget can expand
+to fill all remaining space.
+<tr><td class=mdocTagListItem>AG_WIDGET_HIDE</td><td class=mdocTagListItem>Disable rendering of this widget.
+<tr><td class=mdocTagListItem>AG_WIDGET_VISIBLE</td><td class=mdocTagListItem>This widget and its parent window are both currently visible (read-only).
+<tr><td class=mdocTagListItem>AG_WIDGET_UNDERSIZE</td><td class=mdocTagListItem>Disable rendering of this widget because it was determined to have a
+zero-valued geometry (read-only, set by
+<font class=fnName>AG_WidgetSizeAlloc()</font>). <tr><td class=mdocTagListItem>AG_WIDGET_DISABLED</td><td class=mdocTagListItem>Advise that widget is not accepting user input.
+The effect of this option is widget-dependent (read-only; see
+<a class=xr href="mdoc.cgi@man=AG_Widget.3&amp;printable=y.html#INPUT_STATE">INPUT STATE</a> section).
+This flag may affect the way the widget is rendered.
+<tr><td class=mdocTagListItem>AG_WIDGET_MOUSEOVER</td><td class=mdocTagListItem>A mouse cursor currently intersects the widget's area (read-only; updated
+internally if the
+<font class=dv>AG_WIDGET_USE_MOUSEOVER</font> flag is set).
+This flag may affect the way the widget is rendered.
+<tr><td class=mdocTagListItem>AG_WIDGET_FOCUSABLE</td><td class=mdocTagListItem>The widget is allowed to grab the focus; normally set by
+<font class=fnName>AG_WidgetSetFocusable()</font>. Note that the widget may still become "focused" if child widgets are attached
+to it and one of them happens to grab focus.
+<tr><td class=mdocTagListItem>AG_WIDGET_UNFOCUSED_MOTION</td><td class=mdocTagListItem>Receive
+ <font class=pref>mouse-motion</font> events unconditionally (focus is required by default).
+<tr><td class=mdocTagListItem>AG_WIDGET_UNFOCUSED_BUTTONUP</td><td class=mdocTagListItem>Receive all
+<font class=fnName>mouse-button-up()</font> (mouse button release) events unconditionally.
+<tr><td class=mdocTagListItem>AG_WIDGET_UNFOCUSED_BUTTONDOWN</td><td class=mdocTagListItem>Receive all
+<font class=fnName>mouse-button-up()</font> (mouse button press) events unconditionally.
+<tr><td class=mdocTagListItem>AG_WIDGET_UNFOCUSED_KEYDOWN</td><td class=mdocTagListItem>Receive
+<font class=fnName>key-down()</font> (key press) events unconditionally (focus is required by default).
+<tr><td class=mdocTagListItem>AG_WIDGET_UNFOCUSED_KEYUP</td><td class=mdocTagListItem>Receive
+<font class=fnName>key-up()</font> (key release) events unconditionally (focus is required by default).
+<tr><td class=mdocTagListItem>AG_WIDGET_CATCH_TAB</td><td class=mdocTagListItem>When the user presses the
+<font class=dv>TAB</font> key, generate normal
+<font class=fnName>key-down()</font> and
+<font class=fnName>key-up()</font> events.
+Without this flag,
+<font class=dv>TAB</font> is used to change the focus to the next widget.
+<tr><td class=mdocTagListItem>AG_WIDGET_NOSPACING</td><td class=mdocTagListItem>Advise parent container to disable spacing and padding (per standard box model),
+for this widget.
+<tr><td class=mdocTagListItem>AG_WIDGET_USE_TEXT</td><td class=mdocTagListItem>Allow
+<font class=fnName>draw()</font>, <font class=fnName>size_request()</font> and
+<font class=fnName>size_allocate()</font> to use
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_TextRender.3&amp;printable=y">AG_TextRender(3)</a> and
+<a class=xr href="http://libagar.org/mdoc.cgi?man=AG_TextSize.3&amp;printable=y">AG_TextSize(3)</a>. Agar will automatically save/restore the font engine state according to the
+widget's computed style settings.
+Enables reception of the "font-changed" event.
+<tr><td class=mdocTagListItem>AG_WIDGET_USE_OPENGL</td><td class=mdocTagListItem>Establish a separate OpenGL context for the widget.
+Before the
+<font class=fnName>draw()</font> routine is invoked, Agar will automatically save/restore the
+<font class=dv>GL_PROJECTION</font>, <font class=dv>GL_MODELVIEW</font> and
+<font class=dv>GL_TEXTURE</font> matrices along with GL attributes
+<font class=dv>GL_TRANSFORM_BIT</font>, <font class=dv>GL_VIEWPORT_BIT</font> and
+<font class=dv>GL_TEXTURE_BIT</font>. Enables reception of "widget-reshape", "widget-overlay" and "widget-underlay"
+events.
+<tr><td class=mdocTagListItem>AG_WIDGET_USE_DRAWN</td><td class=mdocTagListItem>Enables reception of the "widget-drawn" event.
+</td></tr>
+<tr><td class=mdocTagListItem>AG_WIDGET_USE_MOUSEOVER</td><td class=mdocTagListItem>Detect cursor motion over the widget's area; update the
+<font class=dv>AG_WIDGET_MOUSEOVER</font> flag and generate "mouse-over" events accordingly.
+</td></tr></table></td></tr></table><a name="SEE_ALSO"></a>
+<hr>
+<h1 class=mansection>SEE ALSO</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+<a class=xr href="mdoc.cgi@man=AG_Cursor.3&amp;printable=y.html">AG_Cursor(3)</a>, <a class=xr href="mdoc.cgi@man=AG_KeyMod.3&amp;printable=y.html">AG_KeyMod(3)</a>, <a class=xr href="mdoc.cgi@man=AG_KeySym.3&amp;printable=y.html">AG_KeySym(3)</a>, <a class=xr href="http://libagar.org/mdoc.cgi?man=AG_Rect.3&amp;printable=y">AG_Rect(3)</a>, <a class=xr href="mdoc.cgi@man=AG_StyleSheet.3&amp;printable=y.html">AG_StyleSheet(3)</a>, <a class=xr href="mdoc.cgi@man=AG_Surface.3&amp;printable=y.html">AG_Surface(3)</a>, <a class=xr href="mdoc.cgi@man=AG_Variable.3&amp;printable=y.html">AG_Variable(3)</a>, <a class=xr href="mdoc.cgi@man=AG_WidgetPrimitives.3&amp;printable=y.html">AG_WidgetPrimitives(3)</a>, <a class=xr href="mdoc.cgi@man=AG_Window.3&amp;printable=y.html">AG_Window(3)</a> </td></tr></table><a name="HISTORY"></a>
+<hr>
+<h1 class=mansection>HISTORY</h1>
+<table style="padding-left:0.4125in; padding-right:0.4125in" width="100%">
+<tr>
+  <td>
+The
+<font class=nm>AG_Widget</font> interface first appeared in 
+			           <a href="http://stable.hypertriton.com/agar/agar-1.0.tar.gz">Agar 1.0</a>.
+Widget-level variable bindings have been replaced by generic
+<a class=xr href="mdoc.cgi@man=AG_Variable.3&amp;printable=y.html">AG_Variable(3)</a> pointers in 
+			           <a href="http://stable.hypertriton.com/agar/agar-1.3.4.tar.gz">Agar 1.3.4</a>.
+The Actions interface first appeared in 
+			           <a href="http://stable.hypertriton.com/agar/agar-1.4.tar.gz">Agar 1.4</a>.
+The
+<font class=dv>AG_WIDGET_USE_OPENGL</font> feature first appeared in 
+			           <a href="http://stable.hypertriton.com/agar/agar-1.5.tar.gz">Agar 1.5</a>.
+</table>

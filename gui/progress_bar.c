@@ -221,9 +221,9 @@ Draw(void *obj)
 	case AG_PROGRESS_BAR_VERT:
 		wAvail = WIDGET(pb)->h - pb->pad*2;
 		rd.x = pb->pad;
-		rd.y = pb->pad + (val - min)*wAvail/(max - min);
+		rd.y = pb->pad;//+ (val - min)*wAvail/(max - min); // WDZ - Patch - Vert ProgBar should grow upwards
 		rd.w = WIDGET(pb)->w - pb->pad*2;
-		rd.h = WIDGET(pb)->h;
+		rd.h = WIDGET(pb)->h - (val - min)*wAvail/(max - min) - 4; // WDZ - Patch - Vert progBar height should shrink as it grows
 		break;
 	case AG_PROGRESS_BAR_HORIZ:
 	default:

@@ -142,6 +142,7 @@ AG_SetEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	}
 	if (ev == NULL) {
 		ev = Malloc(sizeof(AG_Event));
+		memset(ev, 0, sizeof(AG_Event)); // WDZ
 		InitEvent(ev, ob);
 		if (name != NULL) {
 			Strlcpy(ev->name, name, sizeof(ev->name));
@@ -175,6 +176,8 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	AG_ObjectLock(ob);
 
 	ev = Malloc(sizeof(AG_Event));
+	memset(ev, 0, sizeof(AG_Event));
+	
 	InitEvent(ev, ob);
 
 	if (name != NULL) {
@@ -208,6 +211,7 @@ AG_AddEvent(void *p, const char *name, AG_EventFn fn, const char *fmt, ...)
 	AG_Event *ev;					\
 							\
 	ev = Malloc(sizeof(AG_Event));			\
+	memset(ev, 0, sizeof(AG_Event));	\
 	InitEvent(ev, ob);				\
 	ev->name[0] = '\0';				\
 	ev->fn.memb = fn;				\
@@ -863,6 +867,7 @@ AG_AddEventPrologue(AG_EventSinkFn fn, const char *fnArgs, ...)
 	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
 		return (NULL);
 	}
+	memset(es, 0, sizeof(AG_EventSink)); // WDZ - Seems necerssary
 	es->type = AG_SINK_PROLOGUE;
 	es->fn = fn;
 	InitEvent(&es->fnArgs, NULL);
@@ -897,12 +902,14 @@ AG_AddEventEpilogue(AG_EventSinkFn fn, const char *fnArgs, ...)
 	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
 		return (NULL);
 	}
+	memset(es, 0, sizeof(AG_EventSink)); // WDZ - Seems necerssary
 	es->type = AG_SINK_EPILOGUE;
 	es->fn = fn;
 	InitEvent(&es->fnArgs, NULL);
 	AG_EVENT_GET_ARGS(&es->fnArgs, fnArgs);
 	es->fnArgs.argc0 = es->fnArgs.argc;
 	TAILQ_INSERT_TAIL(&src->epilogues, es, sinks);
+	// printf("+++ Add Event Epi %p %p %p\n", es, es->fn, es->fnArgs);
 	return (es);
 }
 void
@@ -914,7 +921,11 @@ AG_DelEventEpilogue(AG_EventSink *es)
 	if (es->type != AG_SINK_EPILOGUE)
 		AG_FatalError("AG_DelEventEpilogue");
 #endif
+	// printf("--- Del Event Epi %p %p %p\n", es, es->fn, es->fnArgs);
 	TAILQ_REMOVE(&src->epilogues, es, sinks);
+	// TAILQ_FOREACH(es, &src->epilogues, sinks) {
+	// 	printf("*** Del Event Epi %p %p %p\n", es, es->fn, es->fnArgs);
+	// }
 	free(es);
 }
 
@@ -932,6 +943,7 @@ AG_AddEventSpinner(AG_EventSinkFn fn, const char *fnArgs, ...)
 	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
 		return (NULL);
 	}
+	memset(es, 0, sizeof(AG_EventSink)); // WDZ - Seems necerssary
 	es->type = AG_SINK_SPINNER;
 	es->fn = fn;
 	InitEvent(&es->fnArgs, NULL);
@@ -974,6 +986,7 @@ AG_AddEventSink(enum ag_event_sink_type type, int ident, Uint flags,
 	if ((es = TryMalloc(sizeof(AG_EventSink))) == NULL) {
 		return (NULL);
 	}
+	memset(es, 0, sizeof(AG_EventSink)); // WDZ - Seems necerssary
 	es->type = type;
 	es->ident = ident;
 	es->flags = flags;
@@ -1593,6 +1606,7 @@ AG_EventLoop(void)
 			return (1);
 		}
 		TAILQ_FOREACH(es, &src->epilogues, sinks) {
+//			printf("*** Run Event Epi %p %p %p\n", es, es->fn, es->fnArgs);
 			es->fn(es, &es->fnArgs);
 		}
 		if (src->breakReq)

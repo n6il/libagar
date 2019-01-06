@@ -1233,6 +1233,9 @@ AG_WidgetDraw(void *p)
 	if (wid->flags & AG_WIDGET_USE_OPENGL)
 		DrawEpilogueGL(wid);
 #endif
+	if (wid->flags & AG_WIDGET_USE_DRAWN)				// WDZ - Addition to AGAR 1.5.0
+		AG_PostEvent(NULL, wid, "widget-drawn", NULL);	// WDZ - Addition to AGAR 1.5.0
+
 	if (wid->flags & AG_WIDGET_USE_TEXT)
 		AG_PopTextState();
 out:
@@ -1672,7 +1675,7 @@ AG_WidgetMapSurface(void *obj, AG_Surface *su)
 		wid->surfaceFlags = Realloc(wid->surfaceFlags,
 		    (wid->nsurfaces+1)*sizeof(Uint));
 		wid->textures = Realloc(wid->textures,
-		    (wid->nsurfaces+1)*sizeof(Uint));
+		    (wid->nsurfaces+1)*sizeof(Uint64)); // WDZ - Texture
 		wid->texcoords = Realloc(wid->texcoords,
 		    (wid->nsurfaces+1)*sizeof(AG_TexCoord));
 		s = wid->nsurfaces++;
@@ -1709,7 +1712,7 @@ AG_WidgetReplaceSurface(void *obj, int s, AG_Surface *su)
 	if (wid->textures[s] != 0 &&
 	    wid->drv != NULL &&
 	    wid->drvOps->deleteTexture != NULL) {
-		wid->drvOps->deleteTexture(wid->drv, wid->textures[s]);
+		wid->drvOps->deleteTexture(wid->drv, &wid->textures[s]); // WDZ - Textures
 		wid->textures[s] = 0;
 	}
 	AG_ObjectUnlock(wid);

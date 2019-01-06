@@ -5,7 +5,8 @@
  */
 
 #include <agar/config/have_sdl.h>
-#ifdef HAVE_SDL
+#include <agar/config/have_sdl2.h>
+#ifdef HAVE_SDL || HAVE_SDL2
 
 #include <agar/core/core.h>
 #include <agar/core/types.h>

@@ -1,9 +1,15 @@
 /*	Public domain	*/
 
+/*
+ * // WDZ - The textures member of the ag_widget structure has been changed to
+ * 64 bit to accomodate drivers that require 64 bit texture IDs such as SDL2.
+ */
+
 #ifndef _AGAR_GUI_WIDGET_H_
 #define _AGAR_GUI_WIDGET_H_
 
 #include <agar/config/have_sdl.h>
+#include <agar/config/have_sdl2.h>
 #include <agar/config/have_opengl.h>
 
 #include <agar/gui/gui.h>
@@ -187,6 +193,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_QUEUE_SURFACE_BACKUP	0x200000 /* Must backup surfaces ASAP */
 #define AG_WIDGET_USE_TEXT		0x400000 /* Use Agar's font engine */
 #define AG_WIDGET_USE_MOUSEOVER		0x800000 /* Update MOUSEOVER flag and generate mouseover events */
+#define AG_WIDGET_USE_DRAWN		0x1000000 
 #define AG_WIDGET_EXPAND		(AG_WIDGET_HFILL|AG_WIDGET_VFILL)
 
 	int x, y;			/* Coordinates in container */
@@ -198,7 +205,7 @@ typedef struct ag_widget {
 #define AG_WIDGET_SURFACE_NODUP	0x01	/* Don't free on destroy */
 #define AG_WIDGET_SURFACE_REGEN	0x02	/* Texture needs to be regenerated */
 	Uint        nsurfaces;
-	Uint        *textures;		/* Cached textures (driver-specific) */
+	Uint64        *textures;		/* Cached textures (driver-specific) */ // WDZ - Textures
 	AG_TexCoord *texcoords;		/* Cached texture coordinates */
 
 	struct ag_widget *focusFwd;		/* For ForwardFocus() */

@@ -53,6 +53,9 @@
 #endif
 # include <agar/core/queue_close.h>
 # include <agar/core/queue.h>
+# ifdef HAVE_DLFCN_H // WDZ - must also have this here too!!!
+#  include <dlfcn.h>
+# endif
 #else
 # include <string.h>
 # include <errno.h>

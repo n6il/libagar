@@ -424,6 +424,7 @@ echo "    --with-x[=PREFIX]           Build with X windows support [check]"
 echo "    --with-xinerama[=PREFIX]    Build with Xinerama support [check]"
 echo "    --with-glx[=PREFIX]         Enable accelerated X driver [check]"
 echo "    --with-sdl[=PREFIX]         Enable SDL 1.2 driver [check]"
+echo "    --with-sdl2[=PREFIX]        Enable SDL 2.0 driver [check]"
 echo "    --with-wgl                  Enable MS Windows driver [check]"
 echo "    --with-cocoa                Enable MacOS X Cocoa driver [check]"
 echo "    --with-uim[=PREFIX]         Enable UIM input method [no]"
@@ -906,9 +907,9 @@ HAVE_CC_WARNINGS="no"
 echo "#undef HAVE_CC_WARNINGS" >$BLD/include/agar/config/have_cc_warnings.h
 echo "hdefs[\"HAVE_CC_WARNINGS\"] = nil" >>configure.lua
 fi;
-rm -f conftest.c $testdir/conftest$EXECSUFFIX
+rm -f conftest.c $testdir/conftest$EXECSUFFIX 
 if [ "${HAVE_CC_WARNINGS}" = "yes" ]; then
-TEST_CFLAGS="-Wall -Werror"
+TEST_CFLAGS="-Wall" # -Werror"
 fi;
 $ECHO_N "cc: checking for long double..."
 $ECHO_N "cc: checking for long double..." >> config.log
@@ -2792,6 +2793,7 @@ fi;
 MK_COMPILE_STATUS="OK"
 cat << EOT > conftest.c
 #include <string.h>
+#include <stdio.h>
 #ifdef HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif
@@ -2808,8 +2810,8 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -o $testdir/conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS conftest.c -o $testdir/conftest" >>config.log
+$CC $CFLAGS $TEST_CFLAGS conftest.c -o $testdir/conftest 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	MK_COMPILE_STATUS="FAIL($?)"
@@ -2836,6 +2838,7 @@ $ECHO_N "checking for dlopen() in -ldl..." >> config.log
 MK_COMPILE_STATUS="OK"
 cat << EOT > conftest.c
 #include <string.h>
+#include <stdio.h>
 #ifdef HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif
@@ -2852,8 +2855,8 @@ main(int argc, char *argv[])
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS -ldl -o $testdir/conftest conftest.c" >>config.log
-$CC $CFLAGS $TEST_CFLAGS -ldl -o $testdir/conftest conftest.c 2>>config.log
+echo "$CC $CFLAGS $TEST_CFLAGS conftest.c -o $testdir/conftest -ldl" >>config.log
+$CC $CFLAGS $TEST_CFLAGS conftest.c -o $testdir/conftest -ldl 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	MK_COMPILE_STATUS="FAIL($?)"
@@ -3778,7 +3781,7 @@ echo "#define ENABLE_GUI \"$ENABLE_GUI\"" >> $BLD/include/agar/config/enable_gui
 echo "#endif" >> $BLD/include/agar/config/enable_gui.h
 echo "hdefs[\"ENABLE_GUI\"] = \"$ENABLE_GUI\"" >>configure.lua
 SUBDIR_gui="gui"
-	if [ "${with_sdl}" != "no" ]
+if [ "${with_sdl}" != "no" ] && [ "${with_sdl2}" != "yes" ] 
  then
 $ECHO_N "checking for SDL..."
 $ECHO_N "checking for SDL..." >> config.log
@@ -4155,8 +4158,8 @@ int main(int argc, char *argv[]) {
 }
 
 EOT
-echo "$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS} 2>>config.log
+echo "$CC $CFLAGS - ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS}" >>config.log
+$CC $CFLAGS -Wall ${SDL_CFLAGS} -o $testdir/conftest conftest.c ${SDL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	MK_COMPILE_STATUS="FAIL($?)"
@@ -4288,8 +4291,519 @@ echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
 	else
 echo "#undef HAVE_SDL" >$BLD/include/agar/config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+fi
+if [ "${with_sdl2}" != "no" ] && [ "${with_sdl}" != "yes" ]
+ then
+$ECHO_N "checking for SDL2..."
+$ECHO_N "checking for SDL2..." >> config.log
+if [ "${prefix_sdl2}" != "" ]; then
+MK_EXEC_FOUND="No"
+
+if [ "${prefix_sdl2}" != "" ]; then
+	if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+		SDL2_PREFIX=`${prefix_sdl2}/bin/sdl2-config --prefix`
+		MK_EXEC_FOUND="Yes"
 	fi
-	if [ "${with_gl}" != "no" ]
+else
+	SDL2_PREFIX=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl2-config" ]; then
+			SDL2_PREFIX=`${path}/sdl2-config --prefix`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+fi
+MK_EXEC_FOUND="No"
+
+if [ "${prefix_sdl2}" != "" ]; then
+	if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+		SDL2_VERSION=`${prefix_sdl2}/bin/sdl2-config --version`
+		MK_EXEC_FOUND="Yes"
+	fi
+else
+	SDL2_VERSION=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl2-config" ]; then
+			SDL2_VERSION=`${path}/sdl2-config --version`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+fi
+MK_EXEC_FOUND="No"
+
+if [ "${prefix_sdl2}" != "" ]; then
+	if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+		SDL2_CFLAGS=`${prefix_sdl2}/bin/sdl2-config --cflags`
+		MK_EXEC_FOUND="Yes"
+	fi
+else
+	SDL2_CFLAGS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl2-config" ]; then
+			SDL2_CFLAGS=`${path}/sdl2-config --cflags`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+fi
+MK_EXEC_FOUND="No"
+
+if [ "${prefix_sdl2}" != "" ]; then
+	if [ -e "${prefix_sdl2}/bin/sdl2-config" ]; then
+		SDL2_LIBS=`${prefix_sdl2}/bin/sdl2-config --libs`
+		MK_EXEC_FOUND="Yes"
+	fi
+else
+	SDL2_LIBS=""
+	for path in `echo $PATH | sed 's/:/ /g'`; do
+		if [ -e "${path}/sdl2-config" ]; then
+			SDL2_LIBS=`${path}/sdl2-config --libs`
+			MK_EXEC_FOUND="Yes"
+			break
+		fi
+	done
+fi
+else
+case "${host}" in
+*-*-darwin*)
+MK_EXEC_FOUND="No"
+SDL2_VERSION=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_VERSION=`${path}/sdl2-config --version`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_VERSION" > ${cache}/exec-SDL2_VERSION
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_VERSION
+fi
+if [ "${SDL2_VERSION}" != "" ]; then
+MK_EXEC_FOUND="No"
+SDL2_PREFIX=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_PREFIX=`${path}/sdl2-config --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_PREFIX" > ${cache}/exec-SDL2_PREFIX
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_PREFIX
+fi
+MK_EXEC_FOUND="No"
+SDL2_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_CFLAGS=`${path}/sdl2-config --cflags`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_CFLAGS" > ${cache}/exec-SDL2_CFLAGS
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_CFLAGS
+fi
+MK_EXEC_FOUND="No"
+SDL2_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_LIBS=`${path}/sdl2-config --libs`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_LIBS" > ${cache}/exec-SDL2_LIBS
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_LIBS
+fi
+else
+$ECHO_N "framework..."
+$ECHO_N "framework..." >> config.log
+SDL2_VERSION="2.0.8"
+SDL2_CFLAGS="-D_USE_SDL_FRAMEWORK"
+SDL2_LIBS="-framework SDL2"
+fi;
+;;
+*-*-freebsd*)
+MK_EXEC_FOUND="No"
+SDL2_VERSION=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl11-config" ]; then
+		SDL2_VERSION=`${path}/sdl11-config --version`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_VERSION" > ${cache}/exec-SDL2_VERSION
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_VERSION
+fi
+if [ "${SDL2_VERSION}" != "" ]; then
+MK_EXEC_FOUND="No"
+SDL2_PREFIX=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl11-config" ]; then
+		SDL2_PREFIX=`${path}/sdl11-config --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_PREFIX" > ${cache}/exec-SDL2_PREFIX
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_PREFIX
+fi
+MK_EXEC_FOUND="No"
+SDL2_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl11-config" ]; then
+		SDL2_CFLAGS=`${path}/sdl11-config --cflags`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_CFLAGS" > ${cache}/exec-SDL2_CFLAGS
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_CFLAGS
+fi
+MK_EXEC_FOUND="No"
+SDL2_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl11-config" ]; then
+		SDL2_LIBS=`${path}/sdl11-config --libs`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_LIBS" > ${cache}/exec-SDL2_LIBS
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_LIBS
+fi
+else
+MK_EXEC_FOUND="No"
+SDL2_PREFIX=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_PREFIX=`${path}/sdl2-config --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_PREFIX" > ${cache}/exec-SDL2_PREFIX
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_PREFIX
+fi
+MK_EXEC_FOUND="No"
+SDL2_VERSION=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_VERSION=`${path}/sdl2-config --version`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_VERSION" > ${cache}/exec-SDL2_VERSION
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_VERSION
+fi
+MK_EXEC_FOUND="No"
+SDL2_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_CFLAGS=`${path}/sdl2-config --cflags`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_CFLAGS" > ${cache}/exec-SDL2_CFLAGS
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_CFLAGS
+fi
+MK_EXEC_FOUND="No"
+SDL2_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_LIBS=`${path}/sdl2-config --libs`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_LIBS" > ${cache}/exec-SDL2_LIBS
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_LIBS
+fi
+fi;
+;;
+*)
+MK_EXEC_FOUND="No"
+SDL2_PREFIX=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_PREFIX=`${path}/sdl2-config --prefix`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_PREFIX" > ${cache}/exec-SDL2_PREFIX
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_PREFIX
+fi
+MK_EXEC_FOUND="No"
+SDL2_VERSION=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_VERSION=`${path}/sdl2-config --version`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_VERSION" > ${cache}/exec-SDL2_VERSION
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_VERSION
+fi
+MK_EXEC_FOUND="No"
+SDL2_CFLAGS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_CFLAGS=`${path}/sdl2-config --cflags`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_CFLAGS" > ${cache}/exec-SDL2_CFLAGS
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_CFLAGS
+fi
+MK_EXEC_FOUND="No"
+SDL2_LIBS=""
+for path in `echo $PATH | sed 's/:/ /g'`; do
+	if [ -e "${path}/sdl2-config" ]; then
+		SDL2_LIBS=`${path}/sdl2-config --libs`
+		MK_EXEC_FOUND="Yes"
+		break
+	fi
+done
+if [ "${cache}" != "" ]; then
+	echo "$SDL2_LIBS" > ${cache}/exec-SDL2_LIBS
+	echo $MK_EXEC_FOUND > ${cache}/exec-found-SDL2_LIBS
+fi
+;;
+esac
+fi;
+if [ "${SDL2_VERSION}" != "" ]; then
+if [ "${prefix_sdl2}" != "" ]; then
+echo "yes ($SDL2_VERSION in ${prefix_sdl2})"
+echo "yes ($SDL2_VERSION in ${prefix_sdl2})" >> config.log
+else
+echo "yes ($SDL2_VERSION)"
+echo "yes ($SDL2_VERSION)" >> config.log
+fi;
+MK_VERSION_MAJOR=`echo "$SDL2_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\1/'`;
+MK_VERSION_MINOR=`echo "$SDL2_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\2/'`;
+MK_VERSION_MICRO=`echo "$SDL2_VERSION" |sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\).*/\3/'`;
+MK_VERSION_OK="no"
+if [ $MK_VERSION_MAJOR -gt 1 ]; then
+	MK_VERSION_OK="yes";
+elif [ $MK_VERSION_MAJOR -eq 1 ]; then
+	if [ "$MK_VERSION_MINOR" = "" ]; then
+		MK_VERSION_OK="yes"
+	else
+		if [ $MK_VERSION_MINOR -gt 2 ]; then
+			MK_VERSION_OK="yes";
+		elif [ $MK_VERSION_MINOR -eq 2 ]; then
+			if [ "$MK_VERSION_MICRO" = "" ]; then
+				MK_VERSION_OK="yes"
+			else
+				if [ $MK_VERSION_MICRO -ge 0 ]; then
+					MK_VERSION_OK="yes"
+				fi
+			fi
+		fi
+	fi
+fi
+if [ "${MK_VERSION_OK}" = "no" ]; then
+echo "*"
+echo "*" >> config.log
+echo "* Minimum required version is 2.0.5 (found $SDL2_VERSION); skipping."
+echo "* Minimum required version is 2.0.5 (found $SDL2_VERSION); skipping." >> config.log
+echo "*"
+echo "*" >> config.log
+fi;
+else
+if [ "${prefix_sdl2}" != "" ]; then
+echo "no (not in ${prefix_sdl2})"
+echo "no (not in ${prefix_sdl2})" >> config.log
+else
+echo "no"
+echo "no" >> config.log
+fi;
+MK_VERSION_OK="no"
+fi;
+if [ "${MK_VERSION_OK}" = "yes" ]; then
+$ECHO_N "checking whether SDL2 works..."
+$ECHO_N "checking whether SDL2 works..." >> config.log
+MK_COMPILE_STATUS="OK"
+cat << EOT > conftest.c
+#ifdef _USE_SDL_FRAMEWORK
+# include <SDL2/SDL.h>
+# ifdef main
+#  undef main
+# endif
+#else
+# include <SDL.h>
+#endif
+int main(int argc, char *argv[]) {
+	SDL_Surface *su;
+
+	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
+		return (1);
+	}
+	su = SDL_CreateRGBSurface(0, 16, 16, 32, 0, 0, 0, 0);
+	SDL_FreeSurface(su);
+	SDL_Quit();
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS - ${SDL2_CFLAGS} -o $testdir/conftest conftest.c ${SDL2_LIBS}" >>config.log
+$CC $CFLAGS -Wall ${SDL2_CFLAGS} -o $testdir/conftest conftest.c ${SDL2_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	MK_COMPILE_STATUS="FAIL($?)"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SDL2="yes"
+echo "#ifndef HAVE_SDL2" > $BLD/include/agar/config/have_sdl2.h
+echo "#define HAVE_SDL2 \"$HAVE_SDL2\"" >> $BLD/include/agar/config/have_sdl2.h
+echo "#endif" >> $BLD/include/agar/config/have_sdl2.h
+echo "hdefs[\"HAVE_SDL2\"] = \"$HAVE_SDL2\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SDL2="no"
+echo "#undef HAVE_SDL2" >$BLD/include/agar/config/have_sdl2.h
+echo "hdefs[\"HAVE_SDL2\"] = nil" >>configure.lua
+fi;
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_SDL2}" = "yes" ]; then
+case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+if [ -e  "${SDL2_PREFIX}/include/SDL2" ]; then
+SDL2_CFLAGS="-I${SDL2_PREFIX}/include/SDL2 -D_GNU_SOURCE=1"
+fi;
+if [ -e  "${SDL2_PREFIX}/lib/libSDL2.a" ]; then
+SDL2_LIBS="-L${SDL2_PREFIX}/lib -lSDL2"
+fi;
+;;
+esac
+echo "#ifndef SDL2_CFLAGS" > $BLD/include/agar/config/sdl2_cflags.h
+echo "#define SDL2_CFLAGS \"$SDL2_CFLAGS\"" >> $BLD/include/agar/config/sdl2_cflags.h
+echo "#endif" >> $BLD/include/agar/config/sdl2_cflags.h
+echo "hdefs[\"SDL2_CFLAGS\"] = \"$SDL2_CFLAGS\"" >>configure.lua
+echo "#ifndef SDL2_LIBS" > $BLD/include/agar/config/sdl2_libs.h
+echo "#define SDL2_LIBS \"$SDL2_LIBS\"" >> $BLD/include/agar/config/sdl2_libs.h
+echo "#endif" >> $BLD/include/agar/config/sdl2_libs.h
+echo "hdefs[\"SDL2_LIBS\"] = \"$SDL2_LIBS\"" >>configure.lua
+else
+$ECHO_N "checking whether SDL2 works (with X11 libs)..."
+$ECHO_N "checking whether SDL2 works (with X11 libs)..." >> config.log
+SDL2_LIBS="${SDL2_LIBS} -L/usr/X11R6/lib -lX11 -lXext -lXrandr -lXrender"
+MK_COMPILE_STATUS="OK"
+cat << EOT > conftest.c
+#ifdef _USE_SDL_FRAMEWORK
+# include <SDL2/SDL.h>
+# ifdef main
+#  undef main
+# endif
+#else
+# include <SDL.h>
+#endif
+int main(int argc, char *argv[]) {
+	SDL_Surface *su;
+
+	if (SDL_Init(SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE) != 0) {
+		return (1);
+	}
+	su = SDL_CreateRGBSurface(0, 16, 16, 32, 0, 0, 0, 0);
+	SDL_FreeSurface(su);
+	SDL_Quit();
+	return (0);
+}
+
+EOT
+echo "$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest conftest.c ${SDL2_LIBS}" >>config.log
+$CC $CFLAGS $TEST_CFLAGS ${SDL2_CFLAGS} -o $testdir/conftest conftest.c ${SDL2_LIBS} 2>>config.log
+if [ $? != 0 ]; then
+	echo "-> failed ($?)" >> config.log
+	MK_COMPILE_STATUS="FAIL($?)"
+fi
+if [ "${MK_COMPILE_STATUS}" = "OK" ]; then
+echo "yes"
+echo "yes" >> config.log
+HAVE_SDL2="yes"
+echo "#ifndef HAVE_SDL2" > $BLD/include/agar/config/have_sdl2.h
+echo "#define HAVE_SDL2 \"$HAVE_SDL2\"" >> $BLD/include/agar/config/have_sdl2.h
+echo "#endif" >> $BLD/include/agar/config/have_sdl2.h
+echo "hdefs[\"HAVE_SDL2\"] = \"$HAVE_SDL2\"" >>configure.lua
+else
+echo "no"
+echo "no" >> config.log
+HAVE_SDL2="no"
+echo "#undef HAVE_SDL2" >$BLD/include/agar/config/have_sdl2.h
+echo "hdefs[\"HAVE_SDL2\"] = nil" >>configure.lua
+fi;
+rm -f conftest.c $testdir/conftest$EXECSUFFIX
+if [ "${HAVE_SDL2}" = "yes" ]; then
+echo "#ifndef SDL2_CFLAGS" > $BLD/include/agar/config/sdl2_cflags.h
+echo "#define SDL2_CFLAGS \"$SDL2_CFLAGS\"" >> $BLD/include/agar/config/sdl2_cflags.h
+echo "#endif" >> $BLD/include/agar/config/sdl2_cflags.h
+echo "hdefs[\"SDL2_CFLAGS\"] = \"$SDL2_CFLAGS\"" >>configure.lua
+echo "#ifndef SDL2_LIBS" > $BLD/include/agar/config/sdl2_libs.h
+echo "#define SDL2_LIBS \"$SDL2_LIBS\"" >> $BLD/include/agar/config/sdl2_libs.h
+echo "#endif" >> $BLD/include/agar/config/sdl2_libs.h
+echo "hdefs[\"SDL2_LIBS\"] = \"$SDL2_LIBS\"" >>configure.lua
+else
+echo "#undef SDL2_CFLAGS" >$BLD/include/agar/config/sdl2_cflags.h
+echo "hdefs[\"SDL2_CFLAGS\"] = nil" >>configure.lua
+SDL2_CFLAGS=""
+echo "#undef SDL2_LIBS" >$BLD/include/agar/config/sdl2_libs.h
+echo "hdefs[\"SDL2_LIBS\"] = nil" >>configure.lua
+SDL2_LIBS=""
+fi;
+fi;
+else
+echo "#undef HAVE_SDL2" >$BLD/include/agar/config/have_sdl2.h
+echo "hdefs[\"HAVE_SDL2\"] = nil" >>configure.lua
+echo "#undef SDL2_CFLAGS" >$BLD/include/agar/config/sdl2_cflags.h
+echo "hdefs[\"SDL2_CFLAGS\"] = nil" >>configure.lua
+echo "#undef SDL2_LIBS" >$BLD/include/agar/config/sdl2_libs.h
+echo "hdefs[\"SDL2_LIBS\"] = nil" >>configure.lua
+fi;
+		if [ "${HAVE_SDL2}" != "yes" ]
+ then
+			if [ "${with_sdl2}" = "yes" ]
+ then
+				echo "*"
+				echo "* --with-sdl2 was requested, but the SDL2 "
+				echo "* library was not found."
+				echo "*"
+				exit 1
+			else
+echo "#undef HAVE_SDL2" >$BLD/include/agar/config/have_sdl2.h
+echo "hdefs[\"HAVE_SDL2\"] = nil" >>configure.lua
+			fi
+		fi
+	else
+echo "#undef HAVE_SDL2" >$BLD/include/agar/config/have_sdl2.h
+echo "hdefs[\"HAVE_SDL2\"] = nil" >>configure.lua
+fi
+if [ "${with_gl}" != "no" ]
  then
 $ECHO_N "checking for OpenGL..."
 $ECHO_N "checking for OpenGL..." >> config.log
@@ -4468,7 +4982,7 @@ int main(int argc, char *argv[]) {
 
 EOT
 echo "$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} 2>>config.log
+$CC $CFLAGS -Wall ${OPENGL_CFLAGS} -o $testdir/conftest conftest.c ${OPENGL_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	MK_COMPILE_STATUS="FAIL($?)"
@@ -4583,7 +5097,7 @@ echo "hdefs[\"HAVE_OPENGL\"] = nil" >>configure.lua
 	
 	if [ "${with_x}" != "no" ]
  then
-$ECHO_N "checking for the X window system..."
+$ECHO_N "checking FreeType worksfor the X window system..."
 $ECHO_N "checking for the X window system..." >> config.log
 if [ "${PKGCONFIG}" != "" -a "`${PKGCONFIG} --variable=prefix x11 2>/dev/null`" != "" ]; then
 if [ "${prefix_x}" != "" ]; then
@@ -5532,7 +6046,7 @@ main(int argc, char *argv[])
 
 EOT
 echo "$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS}" >>config.log
-$CC $CFLAGS $TEST_CFLAGS ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
+$CC $CFLAGS -Wall ${FREETYPE_CFLAGS} -o $testdir/conftest conftest.c ${FREETYPE_LIBS} 2>>config.log
 if [ $? != 0 ]; then
 	echo "-> failed ($?)" >> config.log
 	MK_COMPILE_STATUS="FAIL($?)"
@@ -6167,6 +6681,8 @@ echo "hdefs[\"ENABLE_GUI\"] = nil" >>configure.lua
 SUBDIR_gui=""
 echo "#undef HAVE_SDL" >$BLD/include/agar/config/have_sdl.h
 echo "hdefs[\"HAVE_SDL\"] = nil" >>configure.lua
+echo "#undef HAVE_SDL2" >$BLD/include/agar/config/have_sdl2.h
+echo "hdefs[\"HAVE_SDL2\"] = nil" >>configure.lua
 echo "#undef HAVE_X11" >$BLD/include/agar/config/have_x11.h
 echo "hdefs[\"HAVE_X11\"] = nil" >>configure.lua
 echo "#undef HAVE_COCOA" >$BLD/include/agar/config/have_cocoa.h
@@ -9323,6 +9839,10 @@ SRCS_GUI="${SRCS_GUI} drv_sdl_common.c drv_sdlfb.c"
 SRCS_GUI="${SRCS_GUI} drv_sdlgl.c"
 	fi
 fi
+if [ "${HAVE_SDL2}" = "yes" ]
+ then
+SRCS_GUI="${SRCS_GUI} drv_sdl2_common.c drv_sdl2.c"
+fi
 if [ "${HAVE_OPENGL}" = "yes" ]
  then
 SRCS_GUI="${SRCS_GUI} drv_gl_common.c"
@@ -9849,6 +10369,8 @@ echo "OBJC=$OBJC" >>Makefile.config
 echo "mdefs[\"OBJC\"] = \"$OBJC\"" >>configure.lua
 echo "HAVE_SDL=$HAVE_SDL" >>Makefile.config
 echo "mdefs[\"HAVE_SDL\"] = \"$HAVE_SDL\"" >>configure.lua
+echo "HAVE_SDL2=$HAVE_SDL2" >>Makefile.config
+echo "mdefs[\"HAVE_SDL2\"] = \"$HAVE_SDL2\"" >>configure.lua
 echo "GETTEXT_LIBS=$GETTEXT_LIBS" >>Makefile.config
 echo "mdefs[\"GETTEXT_LIBS\"] = \"$GETTEXT_LIBS\"" >>configure.lua
 echo "PORTAUDIO_LIBS=$PORTAUDIO_LIBS" >>Makefile.config
@@ -9971,6 +10493,8 @@ echo "CXXFLAGS=$CXXFLAGS" >>Makefile.config
 echo "mdefs[\"CXXFLAGS\"] = \"$CXXFLAGS\"" >>configure.lua
 echo "SDL_LIBS=$SDL_LIBS" >>Makefile.config
 echo "mdefs[\"SDL_LIBS\"] = \"$SDL_LIBS\"" >>configure.lua
+echo "SDL2_LIBS=$SDL2_LIBS" >>Makefile.config
+echo "mdefs[\"SDL2_LIBS\"] = \"$SDL2_LIBS\"" >>configure.lua
 echo "HAVE_WGL=$HAVE_WGL" >>Makefile.config
 echo "mdefs[\"HAVE_WGL\"] = \"$HAVE_WGL\"" >>configure.lua
 echo "HAVE_LIBOPENGL32=$HAVE_LIBOPENGL32" >>Makefile.config
@@ -9997,6 +10521,8 @@ echo "HAVE_DEPRECATED_ATTRIBUTE=$HAVE_DEPRECATED_ATTRIBUTE" >>Makefile.config
 echo "mdefs[\"HAVE_DEPRECATED_ATTRIBUTE\"] = \"$HAVE_DEPRECATED_ATTRIBUTE\"" >>configure.lua
 echo "SDL_CFLAGS=$SDL_CFLAGS" >>Makefile.config
 echo "mdefs[\"SDL_CFLAGS\"] = \"$SDL_CFLAGS\"" >>configure.lua
+echo "SDL2_CFLAGS=$SDL2_CFLAGS" >>Makefile.config
+echo "mdefs[\"SDL2_CFLAGS\"] = \"$SDL2_CFLAGS\"" >>configure.lua
 echo "GETTEXT_CFLAGS=$GETTEXT_CFLAGS" >>Makefile.config
 echo "mdefs[\"GETTEXT_CFLAGS\"] = \"$GETTEXT_CFLAGS\"" >>configure.lua
 echo "HAVE_SSE=$HAVE_SSE" >>Makefile.config

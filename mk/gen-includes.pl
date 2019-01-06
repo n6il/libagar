@@ -33,7 +33,10 @@ sub Scan ($$)
 			next;
 		}
 		if ($ent =~ /\.h$/) {
-			my @o = readpipe("perl mk/gen-declspecs.pl '$file'");
+#			Don't send single quotes around the file to mk/gen-declspecs.pl
+#			single quotes are valid file characters!!!
+#			my @o = readpipe("perl mk/gen-declspecs.pl '$file'");
+			my @o = readpipe("perl mk/gen-declspecs.pl $file");
 			if ($? != 0) {
 				print STDERR "gen-declspecs.pl failed\n";
 				exit(1);

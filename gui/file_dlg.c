@@ -187,9 +187,9 @@ RefreshShortcuts(AG_FileDlg *fd, int init)
 	AG_Tlist *tl = fd->comLoc->list;
 
 	AG_TlistClear(tl);
+	char path[AG_PATHNAME_MAX];
 #ifdef _WIN32
 	{
-		char path[4];
 		int drive;
 #ifdef _XBOX
 		DWORD d = AG_XBOX_GetLogicalDrives();
@@ -198,8 +198,8 @@ RefreshShortcuts(AG_FileDlg *fd, int init)
 #endif
 
 		/* Add the Windows drives */
+		AG_TlistItem *ti;
 		for (drive = 0; drive < 26; drive++) {
-			AG_TlistItem *ti;
 
 			if (!(d & (1 << drive))) {
 				continue;
@@ -213,8 +213,10 @@ RefreshShortcuts(AG_FileDlg *fd, int init)
 			if (init &&
 			    toupper(fd->cwd[0]) == path[0] &&
 			    fd->cwd[1] == ':') {
-				AG_ComboSelect(fd->comLoc, ti);
+				//AG_ComboSelect(fd->comLoc, ti); // this will cause a post to LocSelected which will result in any user selected directory being ignored
 			}
+
+			
 #if 0
 			/* TODO icons, etc */
 			switch (GetDriveType(path)) {
@@ -229,10 +231,19 @@ RefreshShortcuts(AG_FileDlg *fd, int init)
 			}
 #endif
 		}
+		// Also add the Current Working Directory and any Requested CWD
+		if (AG_GetCWD(path, sizeof(path)) == 0)
+			if(strcmp(path, fd->cwd))
+				AG_TlistAddS(tl, agIconDirectory.s, path);
+
+		ti = AG_TlistAddS(tl, agIconDirectory.s, fd->cwd);
+
+		if (ti != NULL)
+			AG_ComboSelect(fd->comLoc, ti);
 	}
 #else /* !_WIN32 */
 	{
-		char path[AG_PATHNAME_MAX], *pPath = &path[0], *p;
+		char *pPath = &path[0], *p;
 		AG_User *sysUser;
 	
 		/* Add the filesystem root, home and cwd. */
@@ -276,6 +287,7 @@ DirSelected(AG_Event *event)
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_TlistItem *ti;
 
+
 	AG_ObjectLock(fd);
 	AG_ObjectLock(tl);
 	if ((ti = AG_TlistSelectedItem(tl)) != NULL) {
@@ -295,10 +307,13 @@ LocSelected(AG_Event *event)
 {
 	AG_FileDlg *fd = AG_PTR(1);
 	AG_TlistItem *ti = AG_PTR(2);
+	static int ignore = 1;
 
-	if (ti == NULL) {
+	if (ignore || ti == NULL) {
+		ignore = 0;
 		return;
 	}
+	printf("LocSelected : %s\n", ti->text);
 	if (AG_FileDlgSetDirectoryS(fd, ti->text) == -1) {
 		/* AG_TextMsgFromError() */
 	} else {
@@ -729,6 +744,7 @@ TextboxReturn(AG_Event *event)
 
 	if (endSep ||
 	    (AG_GetFileInfo(file,&info)==0 && info.type == AG_FILE_DIRECTORY)) {
+		printf("TextBoxReturn : %s\n", file);
 		if (AG_FileDlgSetDirectoryS(fd, file) == 0) {
 			RefreshListing(fd);
 		} else {
@@ -858,6 +874,7 @@ AG_FileDlgSetDirectory(AG_FileDlg *fd, const char *fmt, ...)
 	Vsnprintf(path, sizeof(path), fmt, ap);
 	va_end(ap);
 	
+	printf("AG_FileDlgSetDirectory : %s\n", path);
 	return AG_FileDlgSetDirectoryS(fd, path);
 }
 
@@ -916,6 +933,7 @@ AG_FileDlgSetDirectoryS(AG_FileDlg *fd, const char *dir)
 		AG_SetError(_("Path is too long: `%s'"), ncwd);
 		goto fail;
 	}
+	printf("AG_FileDlg : AG_FileDlgSetDirectoryS : %s\n", fd->cwd);
 	if (fd->dirMRU != NULL) {
 		AG_SetString(AG_ConfigObject(), fd->dirMRU, fd->cwd);
 		AG_ConfigSave();
@@ -965,7 +983,6 @@ AG_FileDlgSetFilename(AG_FileDlg *fd, const char *fmt, ...)
 	va_list ap;
 	
 	va_start(ap, fmt);
-	Vsnprintf(file, sizeof(file), fmt, ap);
 	va_end(ap);
 
 	AG_ObjectLock(fd);
