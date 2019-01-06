@@ -1,0 +1,12 @@
+==== prerequisites ====
+brew install sdl2
+
+==== environment ====
+export CFLAGS=-fdeclspec
+export CPPFLAGS=-I/usr/local/opt/sdl2
+export LDFLAGS=-L/usr/local/opt/sdl2
+
+==== build ====
+configure —without-sdl
+make
+
